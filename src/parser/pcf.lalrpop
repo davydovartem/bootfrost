@@ -66,7 +66,11 @@ pterm: PlainTerm = {
 
 infix_pterm: PlainTerm = {
 	<a1: pterm> "++" <a2: pterm> => PlainTerm::new("++".to_string(),vec![a1,a2]),
-}
+	<a1: pterm> "<f" <a2: pterm> => PlainTerm::new("<f".to_string(),vec![a1,a2]),
+	<a1: pterm> ">f" <a2: pterm> => PlainTerm::new(">f".to_string(),vec![a1,a2]),
+	<a1: pterm> "<=f" <a2: pterm> => PlainTerm::new("<=f".to_string(),vec![a1,a2]),
+	<a1: pterm> ">=f" <a2: pterm> => PlainTerm::new(">=f".to_string(),vec![a1,a2]),
+};
 
 gterm: PlainTerm = {
 	<t: pterm> => t,
@@ -75,5 +79,5 @@ gterm: PlainTerm = {
 
 
 symbol: String = {
-    <s: r#"["=<>+$a-zA-Z0-9_][=<>+a-zA-Z0-9_"]*"#> => s.to_string(),
+    <s: r#"[=<>+$a-zA-Z0-9_][=<>+fa-zA-Z0-9_]*"#> => s.to_string(),
 };

@@ -12,7 +12,6 @@ use std::hash::Hash;
 use crate::misc::*;
 use crate::context::*;
 use crate::plain::*;
-use crate::strategies::environment::*;
 
 
 pub enum FunctorType{
@@ -49,17 +48,65 @@ impl fmt::Debug for Symbol{
 }
 
 
-#[derive(Clone, Eq, PartialEq, Hash, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub enum Term{
 	AVariable(SymbolId),
 	EVariable(SymbolId, BlockId),
 	SConstant(SymbolId),
 	Bool(bool),
 	Integer(i64),
+	Float(f64),
 	String(String),
 	SFunctor(SymbolId, Vec<TermId>),
 	IFunctor(SymbolId, Vec<TermId>),
 	List(Vec<TermId>),
+}
+
+impl PartialEq for Term {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Term::AVariable(a), Term::AVariable(b)) => a == b,
+            (Term::EVariable(a1, a2), Term::EVariable(b1, b2)) => a1 == b1 && a2 == b2,
+            (Term::SConstant(a), Term::SConstant(b)) => a == b,
+            (Term::Bool(a), Term::Bool(b)) => a == b,
+            (Term::Integer(a), Term::Integer(b)) => a == b,
+            (Term::Float(a), Term::Float(b)) => a == b,
+            (Term::String(a), Term::String(b)) => a == b,
+            (Term::SFunctor(a1, a2), Term::SFunctor(b1, b2)) => a1 == b1 && a2 == b2,
+            (Term::IFunctor(a1, a2), Term::IFunctor(b1, b2)) => a1 == b1 && a2 == b2,
+            (Term::List(a), Term::List(b)) => a == b,
+            _ => false,
+        }
+    }
+}
+
+impl Eq for Term {}
+
+impl std::hash::Hash for Term {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            Term::AVariable(id) => id.hash(state),
+            Term::EVariable(id, bid) => {
+                id.hash(state);
+                bid.hash(state);
+            }
+            Term::SConstant(id) => id.hash(state),
+            Term::Bool(b) => b.hash(state),
+            Term::Integer(i) => i.hash(state),
+            Term::Float(f) => f.to_bits().hash(state),
+            Term::String(s) => s.hash(state),
+            Term::SFunctor(id, args) => {
+                id.hash(state);
+                args.hash(state);
+            }
+            Term::IFunctor(id, args) => {
+                id.hash(state);
+                args.hash(state);
+            }
+            Term::List(args) => args.hash(state),
+        }
+    }
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
@@ -200,6 +247,18 @@ impl PSTerms{
             	return tid;
             }
         }
+		if let Ok(n) = &s.parse::<f64>(){
+            let term = Term::Float(*n);
+            if let Some(tid) = self.index.get(&term){
+            	return *tid;
+            }else{
+            	let tid = TermId(self.terms.len());
+            	self.terms.push(term.clone());
+            	self.index.insert(term,tid);
+            	return tid;
+            }
+        }
+
 
         if s == "true"{
             return TermId(1);
@@ -412,6 +471,9 @@ impl fmt::Display for TidDisplay<'_>{
 			},
 			Term::Integer(i) => {
 				write!(fmt, "{}", i)
+			},
+			Term::Float(f) => {
+				write!(fmt, "{}", f)
 			},
 			Term::String(s) => {
 				write!(fmt, "\"{}\"", s)

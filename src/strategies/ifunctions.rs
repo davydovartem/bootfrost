@@ -24,6 +24,11 @@ fn gt(a:i64, b:i64) -> bool {a > b}
 fn lteq(a:i64, b:i64) -> bool {a <= b}
 fn gteq(a:i64, b:i64) -> bool {a >= b}
 
+fn lt_float(a:f64, b:f64) -> bool {a < b}
+fn gt_float(a:f64, b:f64) -> bool {a > b}
+fn lteq_float(a:f64, b:f64) -> bool {a <= b}
+fn gteq_float(a:f64, b:f64) -> bool {a >= b}
+
 
 macro_rules! result_term{
 	($res:expr, bool) => {
@@ -31,6 +36,9 @@ macro_rules! result_term{
 	};
 	($res:expr, i64) => {
 		Term::Integer($res)
+	};
+	($res:expr, f64) => {
+		Term::Float($res)
 	}
 }
 
@@ -48,6 +56,39 @@ macro_rules! ifunction_binary_integers{
 				(_n1, _n2)
 			}else{
 				panic!("");
+			};
+
+			env.psterms.get_tid(result_term!($f(n1,n2), $tp)).unwrap()
+		}
+	}
+}
+
+macro_rules! ifunction_binary_floats{
+	($f:tt, $tp:tt) => {
+		|args: &Vec<TermId>, env: &mut PEnv| -> TermId{
+			if args.len() != 2{
+				panic!("");
+			}
+
+			let arg0 = env.psterms.get_term(&args[0]);
+			let arg1 = env.psterms.get_term(&args[1]);
+
+			let (n1,n2) = match (arg0, arg1) {
+				(Term::Float(_n1), Term::Float(_n2)) => {
+					(_n1, _n2)
+				},
+				(Term::Integer(_n1), Term::Integer(_n2)) => {
+					(_n1 as f64, _n2 as f64)
+				},
+				(Term::Integer(_n1), Term::Float(_n2)) => {
+					(_n1 as f64, _n2)
+				},
+				(Term::Float(_n1), Term::Integer(_n2)) => {
+					(_n1, _n2 as f64)
+				},
+				_ => {
+					panic!("");
+				}
 			};
 
 			env.psterms.get_tid(result_term!($f(n1,n2), $tp)).unwrap()
@@ -498,7 +539,52 @@ fn eq(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 	env.psterms.get_tid(Term::Bool(res)).unwrap()
 }
 
+fn dist(args: &Vec<TermId>, env: &mut PEnv) -> TermId {
+    if args.len() != 4 {
+        panic!("Функция dist требует ровно 4 аргумента: x0, y0, x1, y1");
+    }
 
+    let arg0 = env.psterms.get_term(&args[0]);
+    let arg1 = env.psterms.get_term(&args[1]);
+    let arg2 = env.psterms.get_term(&args[2]);
+    let arg3 = env.psterms.get_term(&args[3]);
+
+    let (x0, y0, x1, y1) = match (arg0, arg1, arg2, arg3) {
+        (Term::Integer(x0), Term::Integer(y0), Term::Integer(x1), Term::Integer(y1)) => {
+            (x0 as f64, y0 as f64, x1 as f64, y1 as f64)
+        },
+        (Term::Float(x0), Term::Float(y0), Term::Float(x1), Term::Float(y1)) => {
+            (x0, y0, x1, y1)
+        },
+        (Term::Integer(x0), Term::Integer(y0), Term::Float(x1), Term::Float(y1)) => {
+            (x0 as f64, y0 as f64, x1, y1)
+        },
+        (Term::Float(x0), Term::Float(y0), Term::Integer(x1), Term::Integer(y1)) => {
+            (x0, y0, x1 as f64, y1 as f64)
+        },
+        (Term::Integer(x0), Term::Float(y0), Term::Integer(x1), Term::Float(y1)) => {
+            (x0 as f64, y0, x1 as f64, y1)
+        },
+        (Term::Float(x0), Term::Integer(y0), Term::Float(x1), Term::Integer(y1)) => {
+            (x0, y0 as f64, x1, y1 as f64)
+        },
+        (Term::Integer(x0), Term::Float(y0), Term::Float(x1), Term::Integer(y1)) => {
+            (x0 as f64, y0, x1, y1 as f64)
+        },
+        (Term::Float(x0), Term::Integer(y0), Term::Integer(x1), Term::Float(y1)) => {
+            (x0, y0 as f64, x1 as f64, y1)
+        },
+        _ => {
+            panic!("Все аргументы функции dist должны быть числами (целыми или вещественными)");
+        }
+    };
+
+    let dx = x1 - x0;
+    let dy = y1 - y0;
+    let distance = (dx * dx + dy * dy).sqrt();
+
+    env.psterms.get_tid(result_term!(distance, f64)).unwrap()
+}
 
 // ====
 pub fn init() -> (PSTerms, HashMap<String, SymbolId>){
@@ -518,6 +604,10 @@ pub fn init() -> (PSTerms, HashMap<String, SymbolId>){
 		(">".to_string(), (ifunction_binary_integers!(gt, bool) as IFunction, Position::Infix)),
 		("<=".to_string(), (ifunction_binary_integers!(lteq, bool) as IFunction, Position::Infix)),
 		(">=".to_string(), (ifunction_binary_integers!(gteq, bool) as IFunction, Position::Infix)),
+		("<f".to_string(), (ifunction_binary_floats!(lt_float, bool) as IFunction, Position::Infix)),
+		(">f".to_string(), (ifunction_binary_floats!(gt_float, bool) as IFunction, Position::Infix)),
+		("<=f".to_string(), (ifunction_binary_floats!(lteq_float, bool) as IFunction, Position::Infix)),
+		(">=f".to_string(), (ifunction_binary_floats!(gteq_float, bool) as IFunction, Position::Infix)),
 		("++".to_string(), (concat as IFunction, Position::Infix)),
 		("replace".to_string(), (replace as IFunction, Position::Classic)),
 		("blen".to_string(), (blen as IFunction, Position::Classic)),
@@ -535,6 +625,7 @@ pub fn init() -> (PSTerms, HashMap<String, SymbolId>){
 		("subseteq".to_string(), (subseteq as IFunction, Position::Infix)),
 		("sort".to_string(), (sortlist as IFunction, Position::Classic)),
 		("dedup".to_string(), (dedup as IFunction, Position::Classic)),
+		("dist".to_string(), (dist as IFunction, Position::Classic)),
 		// ("&".to_string(), (notequal as IFunction, Position::Infix)),
 	]);
 

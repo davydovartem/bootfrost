@@ -74,7 +74,11 @@ infatom:String = {
 	"in" => "in".to_string(),
 	"notin" => "notin".to_string(),
 	"subseteq" => "subseteq".to_string(),
-}
+	">f" => ">f".to_string(),
+	"<f" => "<f".to_string(),
+	">=f" => ">=f".to_string(),
+	"<=f" => "<=f".to_string(),
+};
 
 symbol: String = {
     <s: r#"[$@a-zA-Z0-9_./][$@a-zA-Z0-9_./]*"#> => s.to_string(),
