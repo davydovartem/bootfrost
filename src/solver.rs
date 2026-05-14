@@ -54,6 +54,58 @@ pub struct Solver{
 }
 
 impl Solver{
+	fn export_term_with(psterms: &PSTerms, tid: TermId) -> JsonTerm{
+		match psterms.get_term(&tid){
+			Term::AVariable(sid) | Term::EVariable(sid, ..) | Term::SConstant(sid) => {
+				JsonTerm::leaf(psterms.get_symbol(&sid).name.clone())
+			},
+			Term::Bool(b) => JsonTerm::leaf(b.to_string()),
+			Term::Integer(i) => JsonTerm::leaf(i.to_string()),
+			Term::String(s) => JsonTerm::leaf(s),
+			Term::SFunctor(sid, args) | Term::IFunctor(sid, args) => {
+				JsonTerm::node(
+					psterms.get_symbol(&sid).name.clone(),
+					args.into_iter().map(|arg| Self::export_term_with(psterms, arg)).collect()
+				)
+			},
+			Term::List(args) => {
+				JsonTerm::node(
+					"list".to_string(),
+					args.into_iter().map(|arg| Self::export_term_with(psterms, arg)).collect()
+				)
+			},
+		}
+	}
+
+	fn export_term(&self, tid: TermId) -> JsonTerm{
+		Self::export_term_with(&self.psterms, tid)
+	}
+
+	fn export_formula(&self, tid: TqfId) -> JsonFormula{
+		let tqf = &self.tqfs[tid.0];
+		JsonFormula{
+			qtype: match tqf.quantifier{
+				Quantifier::Forall => "FORALL".to_string(),
+				Quantifier::Exists => "EXISTS".to_string(),
+			},
+			vars_list: tqf.vars.iter().map(|v| self.export_term(*v)).collect(),
+			atoms_list: tqf.conj.iter().map(|a| self.export_term(*a)).collect(),
+			children: tqf.next.iter().map(|n| self.export_formula(*n)).collect(),
+		}
+	}
+
+	fn export_base(&self) -> Vec<JsonBaseItem>{
+		self.base.base.iter().enumerate().map(|(i, b)| {
+			JsonBaseItem{
+				atom: self.export_term(b.term),
+				deleted: self.attributes.check(
+					KeyObject::BaseIndex(i),
+					AttributeName("deleted".to_string()),
+					AttributeValue("true".to_string())
+				),
+			}
+		}).collect()
+	}
 
 	pub fn print_tqf(&self, tid: TqfId, tab:String, context: &Context){
 		let tqf = &self.tqfs[tid.0];
@@ -112,11 +164,11 @@ impl Solver{
 	pub fn print(&mut self){
 		println!("\nCurrent formula:");
 		print!("Base: ");
-		let mut b_str = "".to_string();
+		let mut base_json = vec![];
 
 		for (i,b) in self.base.base.iter().enumerate(){
 			let deleted = self.attributes.check(KeyObject::BaseIndex(i), AttributeName("deleted".to_string()), AttributeValue("true".to_string()));
-			if deleted{ print!("["); b_str = format!("{}[",b_str);}
+			if deleted{ print!("["); }
 
 			let td1 = TidDisplay{
 				tid: b.term,
@@ -126,15 +178,18 @@ impl Solver{
 			};
 
 			print!("{}", &td1);
-			b_str = format!("{}{}",b_str,&td1);
+			base_json.push(JsonBaseItem{
+				atom: self.export_term(b.term),
+				deleted: deleted,
+			});
 
-			if deleted{ print!("]");b_str = format!("{}]",b_str);}			
-			if i < self.base.len() - 1{ print!(", "); b_str = format!("{}, ",b_str);}
+			if deleted{ print!("]"); }
+			if i < self.base.len() - 1{ print!(", "); }
 
 			
 		}
 		if !self.slog.is_empty(){
-			self.slog.set_base(b_str);
+			self.slog.set_base(base_json);
 		}
 
 		println!("\n\nQuestions:");
@@ -188,6 +243,7 @@ impl Solver{
 			slog: SolverLog::new()
 		};
 
+		solver.slog.set_formula(solver.export_formula(tid));
 		solver.enable_block();
 		solver
 	}
@@ -398,20 +454,23 @@ impl Solver{
 				};				
 				print_batoms(&vec![], &mut env);
 				
-				let mut vector = env.answer.get_batoms();
-				vector.retain(|s| s.is_some());
-				let a_u_str = vector.iter().map(|ve|
-					format!("{}, ", TidDisplay{
-						tid: env.base[ve.unwrap()].term,
-						psterms: env.psterms,
-						context: None,
-						dm: DisplayMode::Plain,}
-					)
-				).collect::<Vec<String>>().join(", ");
-				
-				let a_a_str = format!("{}", TidsDisplay{tids: &added_terms, psterms: &self.psterms, context:None, dm: DisplayMode::Plain, d:", "});
+				let mut used_term_ids: Vec<TermId> = env.answer.get_batoms()
+					.into_iter()
+					.flatten()
+					.map(|batom_i| env.base[batom_i].term)
+					.collect();
+				used_term_ids.dedup();
 
-				self.slog.set_atoms(a_a_str, a_u_str);
+				let atoms_added = added_terms
+					.iter()
+					.map(|tid| Self::export_term_with(&self.psterms, *tid))
+					.collect();
+				let atoms_used = used_term_ids
+					.iter()
+					.map(|tid| Self::export_term_with(&self.psterms, *tid))
+					.collect();
+
+				self.slog.set_atoms(atoms_added, atoms_used);
 
 			}
 			// add questions
