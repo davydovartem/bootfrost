@@ -16,6 +16,7 @@ type IFunction = fn(&Vec<TermId>, &mut PEnv) -> TermId;
 fn plus(a:i64,b:i64) -> i64 {a + b}
 fn minus(a:i64,b:i64) -> i64 {a - b}
 fn multiply(a:i64,b:i64) -> i64 {a * b}
+fn divide(a:i64,b:i64) -> i64 {a / b}
 
 // fn eq(a:i64, b:i64) -> bool {a == b}
 // fn noteq(a:i64, b:i64) -> bool {a != b}
@@ -598,6 +599,7 @@ pub fn init() -> (PSTerms, HashMap<String, SymbolId>){
 		("+".to_string(), (ifunction_binary_integers!(plus, i64) as IFunction, Position::Infix)),
 		("-".to_string(), (ifunction_binary_integers!(minus, i64) as IFunction, Position::Infix)),
 		("*".to_string(), (ifunction_binary_integers!(multiply, i64) as IFunction, Position::Infix)),
+		("/".to_string(), (ifunction_binary_integers!(divide, i64) as IFunction, Position::Infix)),
 		// ("==".to_string(), (ifunction_binary_integers!(eq, bool) as IFunction, Position::Infix)),
 		// ("!=".to_string(), (ifunction_binary_integers!(noteq, bool) as IFunction, Position::Infix)),
 		("<".to_string(), (ifunction_binary_integers!(lt, bool) as IFunction, Position::Infix)),

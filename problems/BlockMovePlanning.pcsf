@@ -1,0 +1,82 @@
+? R(r1, N), R(r2, E), R(r3, S), B(b1), B(b2), Pos(r1, 1, 8), Pos(r2, 7, 7), Pos(r3, 7, 2), ~
+	Pos(b1, 6, 5), Pos(b2, 2, 3), H(10), W(8)
+	#Goal question
+	!x, y B(x), B(y), x != y
+		?
+			! Pos(x, 4, 10), Pos(y, 4, 9)
+			! Pos(x, 4, 9), Pos(y, 4, 10)
+	#--------1
+	!b, x, y B(b), Pos(b, x, y)
+		? App(r1, x, y - 1), App(r2, x, y - 1)
+		? App(r2, x, y - 1), App(r3, x, y - 1)	
+		? App(r3, x, y - 1), App(r1, x, y - 1)
+	#--------2
+	# Если расстояние между позицией, в которую попал бы робот, двигаясь в выбранном направлении, и
+	# позицией текущей цели стало бы большим чем текущая позиция робота, то поворачиваемся по часовой стрелке на 90 градусов
+	!r, x, y, u, v R(r, N), Pos(r, x, y), Free(x, y + 1), App(r, u, v), ~
+				dist(x, y, u, v) <f dist(x, y + 1, u, v) $ remove_fact(0)
+		? R(r, E)
+	!r, x, y, u, v R(r, E), Pos(r, x, y), Free(x + 1, y), App(r, u, v), ~
+				dist(x, y, u, v) <f dist(x + 1, y, u, v) $ remove_fact(0)
+		? R(r, S)
+	!r, x, y, u, v R(r, S), Pos(r, x, y), Free(x, y - 1), App(r, u, v), ~
+				dist(x, y, u, v) <f dist(x, y - 1, u, v) $ remove_fact(0)
+		? R(r, W)
+	!r, x, y, u, v R(r, W), Pos(r, x, y), Free(x - 1, y), App(r, u, v), ~
+				dist(x, y, u, v) <f dist(x - 1, y, u, v) $ remove_fact(0)
+		? R(r, N)
+	#--------3
+	#Эта часть правил соответствует движению роботов в ориентированном направлении. 
+	#Проверка расстояния между текущим положением робота и назначенной целью является
+	#эвристикой для сокращения пространства поиска
+	!r,x,y,u,v  R(r, N), Pos(r, x, y), Free(x, y + 1), App(r,u,v), ~
+				dist(x, y, u, v) >f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(2)
+		? Pos(r, x, y + 1)
+	!r,x,y,u,v  R(r, E), Pos(r, x, y), Free(x + 1, y), App(r,u,v), ~
+				dist(x, y, u, v) >f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(2)
+		? Pos(r, x + 1, y)
+	!r,x,y,u,v  R(r, S), Pos(r, x, y), Free(x, y - 1), App(r,u,v), ~
+				dist(x, y, u, v) >f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(2)
+		? Pos(r, x, y - 1)
+	!r,x,y,u,v  R(r, W), Pos(r, x, y), Free(x - 1, y), App(r,u,v), ~
+				dist(x, y, u, v) >f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(2)
+		? Pos(r, x - 1, y)
+	#--------4
+	#Проверка выполнения текущего задания. Если робот находится рядом с блоком и готов к его перемещению, то ему необходимо повернуть на север.
+	!r,x,y,d  R(r, d), App(r, x, y), Pos(r, x, y - 1) $ remove_fact(1), remove_fact(2)
+		? R(r, N), Ready(r)
+	#--------5
+	#Если два разных робота готовы толкать блок, они одновременно переходят в режим движения.
+	!b,x,y,r1,r2,x1,y1,x2,y2 Ready(r1), Ready(r2), Pos(r1, x1, y1), Pos(r2, x2, y2), Pos(b, x, y), ~
+				Free(x1, y1 - 2), Free(x2, y2 - 2), r1 != r2 $ remove_fact(2), remove_fact(3), remove_fact(4), remove_fact(5), remove_fact(6)
+		? Pos(r1, x1, y1 + 1), Pos(r2, x2, y2 + 1), Move(r1, b), Move(r2, b), Pos(b, x, y + 1)
+	#--------6
+	#Проверка достижения края сцены роботом, перемещающим блок
+	!r,b,x,y,h Move(r, b), Ready(r), Pos(r, x, y), H(h), y == h - 1 $ remove_fact(0), remove_fact(1)
+		? BlockMoved(b, 1)
+	#аналогичное правило, если один из блоков уже был перемещен
+	!r,b,x,y,h,n Move(r, b), Ready(r), Pos(r, x, y), H(h), BlockMoved(b, n), y == h - n $ remove_fact(0), remove_fact(1)
+		? BlockMoved(b, n + 1)
+	#--------7
+	#Правило для назначения одного из роботов двигаться к краю (торцу) блока для дальнейшего продвижения к цели по оси X. Если текущее положение
+	#блока находится в левой части сцены, то назначается целевое положение робота слева от блока, иначе - наоборот.
+	!b,n,x,y,w BlockMoved(b, n), Pos(b, x, y), W(w), x <f w / 2
+		? App(r1, x - 1, y)
+		? App(r2, x - 1, y)
+		? App(r3, x - 1, y)
+	!b,n,x,y,w BlockMoved(b, n), Pos(b, x, y), W(w), x >f w / 2
+		? App(r1, x + 3, y)
+		? App(r2, x + 3, y)
+		? App(r3, x + 3, y)
+	#--------8
+	#Два правила для проверки достижения второго пункта назначения. Поворот робота в нужном направлении. 
+	!r,b,n,x,y BlockMoved(b, n), Pos(b, x, y), App(r, x - 1, y)
+		? Ready(r), R(r, E)
+	!r,b,n,x,y BlockMoved(b, n), Pos(b, x, y), App(r, x + 3, y)
+		? Ready(r), R(r, W)
+	#--------9
+	#Последние правила соответствуют перемещению робота и блока. Эти правила добавят к базе факт, который завершит вывод.
+	!b,x,y,r,xr,yr Ready(r), R(r, E), Pos(r, xr, yr), Pos(b, x, y),	Free(x + 3, yr)
+		? Pos(r, xr + 1, yr), Move(r, b), Pos(b, x + 1, y)
+	!b,x,y,r,xr,yr Ready(r), R(r, W), Pos(r, xr, yr), Pos(b, x, y), Free(x - 1, yr)
+		? Pos(r, xr - 1, yr), Move(r, b), Pos(b, x - 1, y)

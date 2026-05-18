@@ -3,15 +3,15 @@
     {
       "step": 0,
       "question": 0,
-      "answer": "{x -> b1, y -> b1}+18",
+      "answer": "{x -> b1, y -> b2}+26",
       "atoms_added": "",
-      "atoms_used": "B(b1), , B(b1), ",
+      "atoms_used": "B(b1), , B(b2), ",
       "base": "R(r1, N), R(r2, E), R(r3, S), B(b1), B(b2), Pos(r1, 1, 8), Pos(r2, 7, 7), Pos(r3, 7, 2), Pos(b1, 6, 5), Pos(b2, 2, 3), H(10), W(8)"
     },
     {
       "step": 1,
       "question": 1,
-      "answer": "{x -> 6, b -> b1, y -> 5}+28",
+      "answer": "{b -> b1, y -> 5, x -> 6}+28",
       "atoms_added": "App(r1, 6, 4), App(r2, 6, 4)",
       "atoms_used": "B(b1), , Pos(b1, 6, 5), ",
       "base": "R(r1, N), R(r2, E), R(r3, S), B(b1), B(b2), Pos(r1, 1, 8), Pos(r2, 7, 7), Pos(r3, 7, 2), Pos(b1, 6, 5), Pos(b2, 2, 3), H(10), W(8), App(r1, 6, 4), App(r2, 6, 4)"
@@ -19,37 +19,21 @@
     {
       "step": 2,
       "question": 0,
-      "answer": "{x -> b1, y -> b2}+22",
-      "atoms_added": "",
-      "atoms_used": "B(b1), , B(b2), ",
-      "base": "R(r1, N), R(r2, E), R(r3, S), B(b1), B(b2), Pos(r1, 1, 8), Pos(r2, 7, 7), Pos(r3, 7, 2), Pos(b1, 6, 5), Pos(b2, 2, 3), H(10), W(8), App(r1, 6, 4), App(r2, 6, 4)"
-    },
-    {
-      "step": 3,
-      "question": 0,
-      "answer": "{x -> b2, y -> b1}+54",
+      "answer": "{y -> b1, x -> b2}+62",
       "atoms_added": "",
       "atoms_used": "B(b2), , B(b1), ",
       "base": "R(r1, N), R(r2, E), R(r3, S), B(b1), B(b2), Pos(r1, 1, 8), Pos(r2, 7, 7), Pos(r3, 7, 2), Pos(b1, 6, 5), Pos(b2, 2, 3), H(10), W(8), App(r1, 6, 4), App(r2, 6, 4)"
     },
     {
-      "step": 4,
-      "question": 0,
-      "answer": "{y -> b2, x -> b2}+58",
-      "atoms_added": "",
-      "atoms_used": "B(b2), , B(b2), ",
-      "base": "R(r1, N), R(r2, E), R(r3, S), B(b1), B(b2), Pos(r1, 1, 8), Pos(r2, 7, 7), Pos(r3, 7, 2), Pos(b1, 6, 5), Pos(b2, 2, 3), H(10), W(8), App(r1, 6, 4), App(r2, 6, 4)"
-    },
-    {
-      "step": 5,
+      "step": 3,
       "question": 1,
-      "answer": "{b -> b2, x -> 2, y -> 3}+64",
+      "answer": "{y -> 3, b -> b2, x -> 2}+64",
       "atoms_added": "App(r1, 2, 2), App(r2, 2, 2)",
       "atoms_used": "B(b2), , Pos(b2, 2, 3), ",
       "base": "R(r1, N), R(r2, E), R(r3, S), B(b1), B(b2), Pos(r1, 1, 8), Pos(r2, 7, 7), Pos(r3, 7, 2), Pos(b1, 6, 5), Pos(b2, 2, 3), H(10), W(8), App(r1, 6, 4), App(r2, 6, 4), App(r1, 2, 2), App(r2, 2, 2)"
     },
     {
-      "step": 6,
+      "step": 4,
       "question": 0,
       "answer": "",
       "atoms_added": "",
@@ -57,5 +41,5 @@
       "base": ""
     }
   ],
-  "result": "SolverResult { t: Exhausted, steps: 7 }"
+  "result": "SolverResult { t: Exhausted, steps: 5 }"
 }
