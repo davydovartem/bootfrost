@@ -79,3 +79,7 @@ $RECYCLE.BIN/
 
 /target
 .*/
+/tools/block_move_viewer/__pycache__
+/tools/block_move_viewer/__pycache__/*
+/tools/block_move_viewer/exports
+/tools/block_move_viewer/exports/*

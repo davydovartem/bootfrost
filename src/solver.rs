@@ -61,6 +61,7 @@ impl Solver{
 			},
 			Term::Bool(b) => JsonTerm::leaf(b.to_string()),
 			Term::Integer(i) => JsonTerm::leaf(i.to_string()),
+			Term::Float(f) => JsonTerm::leaf(f.to_string()),
 			Term::String(s) => JsonTerm::leaf(s),
 			Term::SFunctor(sid, args) | Term::IFunctor(sid, args) => {
 				JsonTerm::node(
@@ -620,7 +621,7 @@ pub fn processing(tid:TermId, context: &Context, answer1: Option<&Answer>, env: 
 				ProcessingResult::Existing(tid)
 			}			
 		}
-		Term::SConstant(..) | Term::Bool(..) | Term::Integer(..) | Term::String(..) => {
+		Term::SConstant(..) | Term::Bool(..) | Term::Integer(..) | Term::Float(..) | Term::String(..) => {
 			ProcessingResult::Existing(tid)
 		},
 		Term::SFunctor(sid, args) => {
