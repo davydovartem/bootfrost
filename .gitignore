@@ -78,5 +78,8 @@ $RECYCLE.BIN/
 # Added by cargo
 
 /target
-
 .*/
+/tools/block_move_viewer/__pycache__
+/tools/block_move_viewer/__pycache__/*
+/tools/block_move_viewer/exports
+/tools/block_move_viewer/exports/*
