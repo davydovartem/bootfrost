@@ -191,8 +191,8 @@ No answers have been found (selected).
 Try question 20
 No answers have been found (selected).
 Try question 2
-New answer has been found: {x1 -> 6, d2 -> E, x2 -> 2, y2 -> 3, d3 -> S, d1 -> N, y1 -> 5}+72
-2: {x1 -> 6, d2 -> E, x2 -> 2, y2 -> 3, d3 -> S, d1 -> N, y1 -> 5}+72
+New answer has been found: {d1 -> N, x1 -> 6, d3 -> S, x2 -> 2, y2 -> 3, y1 -> 5, d2 -> E}+72
+2: {d1 -> N, x1 -> 6, d3 -> S, x2 -> 2, y2 -> 3, y1 -> 5, d2 -> E}+72
 Terms added to the base: AppM(R1, 6, 4), AppM(R2, 7, 4)
 Terms used in the base: R(R1, N), R(R2, E), R(R3, S), Pos(B1, 6, 5), Pos(B2, 2, 3), 
 New questions: NO.
@@ -276,8 +276,8 @@ No answers have been found (selected).
 Try question 1
 No answers have been found (selected).
 Try question 3
-New answer has been found: {x -> 1, v -> 4, y -> 8, u -> 6, r -> R1}+254
-3: {x -> 1, v -> 4, y -> 8, u -> 6, r -> R1}+254
+New answer has been found: {x -> 1, u -> 6, r -> R1, v -> 4, y -> 8}+254
+3: {x -> 1, u -> 6, r -> R1, v -> 4, y -> 8}+254
 Terms added to the base: R(R1, E)
 Terms used in the base: R(R1, N), Pos(R1, 1, 8), Free(1, 9, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -361,8 +361,8 @@ No answers have been found (selected).
 Try question 1
 No answers have been found (selected).
 Try question 4
-New answer has been found: {r -> R2, x -> 7, u -> 7, v -> 4, y -> 7}+306
-4: {r -> R2, x -> 7, u -> 7, v -> 4, y -> 7}+306
+New answer has been found: {u -> 7, y -> 7, x -> 7, v -> 4, r -> R2}+306
+4: {u -> 7, y -> 7, x -> 7, v -> 4, r -> R2}+306
 Terms added to the base: R(R2, S)
 Terms used in the base: R(R2, E), Pos(R2, 7, 7), Free(8, 7, 1), AppM(R2, 7, 4), 
 New questions: NO.
@@ -452,8 +452,8 @@ No answers have been found (selected).
 Try question 7
 No answers have been found (selected).
 Try question 8
-New answer has been found: {y -> 8, r -> R1, v -> 4, u -> 6, x -> 1}+456
-8: {y -> 8, r -> R1, v -> 4, u -> 6, x -> 1}+456
+New answer has been found: {x -> 1, r -> R1, u -> 6, v -> 4, y -> 8}+456
+8: {x -> 1, r -> R1, u -> 6, v -> 4, y -> 8}+456
 Terms added to the base: Pos(R1, 2, 8), Free(2, 8, 0)
 Terms used in the base: R(R1, E), Pos(R1, 1, 8), Free(2, 8, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -543,8 +543,8 @@ No answers have been found (selected).
 Try question 7
 No answers have been found (selected).
 Try question 9
-New answer has been found: {x -> 7, u -> 7, v -> 4, r -> R2, y -> 7}+1098
-9: {x -> 7, u -> 7, v -> 4, r -> R2, y -> 7}+1098
+New answer has been found: {r -> R2, u -> 7, y -> 7, x -> 7, v -> 4}+1098
+9: {r -> R2, u -> 7, y -> 7, x -> 7, v -> 4}+1098
 Terms added to the base: Pos(R2, 7, 6), Free(7, 6, 0)
 Terms used in the base: R(R2, S), Pos(R2, 7, 7), Free(7, 6, 1), AppM(R2, 7, 4), 
 New questions: NO.
@@ -640,8 +640,8 @@ No answers have been found (selected).
 Try question 12
 No answers have been found (selected).
 Try question 13
-New answer has been found: {v -> 4, y -> 6, r -> R2, x -> 7, u -> 7}+1104
-13: {v -> 4, y -> 6, r -> R2, x -> 7, u -> 7}+1104
+New answer has been found: {u -> 7, v -> 4, y -> 6, r -> R2, x -> 7}+1104
+13: {u -> 7, v -> 4, y -> 6, r -> R2, x -> 7}+1104
 Terms added to the base: R(R2, W), AvoidM(R2)
 Terms used in the base: R(R2, S), Pos(R2, 7, 6), AppM(R2, 7, 4), Free(7, 5, 0), 
 New questions: YES. (25)-(25)
@@ -729,8 +729,8 @@ No answers have been found (selected).
 Try question 5
 No answers have been found (selected).
 Try question 6
-New answer has been found: {u -> 7, v -> 4, r -> R2, x -> 7, y -> 6}+692
-6: {u -> 7, v -> 4, r -> R2, x -> 7, y -> 6}+692
+New answer has been found: {x -> 7, y -> 6, r -> R2, u -> 7, v -> 4}+692
+6: {x -> 7, y -> 6, r -> R2, u -> 7, v -> 4}+692
 Terms added to the base: R(R2, N)
 Terms used in the base: R(R2, W), Pos(R2, 7, 6), Free(6, 6, 1), AppM(R2, 7, 4), 
 New questions: NO.
@@ -822,8 +822,8 @@ No answers have been found (selected).
 Try question 10
 No answers have been found (selected).
 Try question 11
-New answer has been found: {r -> R2, x -> 7, y -> 6, u -> 7, v -> 4}+682
-11: {r -> R2, x -> 7, y -> 6, u -> 7, v -> 4}+682
+New answer has been found: {v -> 4, x -> 7, u -> 7, y -> 6, r -> R2}+682
+11: {v -> 4, x -> 7, u -> 7, y -> 6, r -> R2}+682
 Terms added to the base: R(R2, E)
 Terms used in the base: R(R2, N), Pos(R2, 7, 6), AppM(R2, 7, 4), Free(7, 7, 0), 
 New questions: YES. (26)-(26)
@@ -1070,8 +1070,8 @@ No answers have been found (selected).
 Try question 9
 No answers have been found (selected).
 Try question 8
-New answer has been found: {r -> R1, x -> 2, y -> 8, u -> 6, v -> 4}+636
-8: {r -> R1, x -> 2, y -> 8, u -> 6, v -> 4}+636
+New answer has been found: {r -> R1, u -> 6, v -> 4, x -> 2, y -> 8}+636
+8: {r -> R1, u -> 6, v -> 4, x -> 2, y -> 8}+636
 Terms added to the base: Pos(R1, 3, 8), Free(3, 8, 0)
 Terms used in the base: R(R1, E), Pos(R1, 2, 8), Free(3, 8, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -1191,8 +1191,8 @@ No answers have been found (selected).
 Try question 20
 No answers have been found (selected).
 Try question 8
-New answer has been found: {r -> R1, u -> 6, x -> 3, v -> 4, y -> 8}+660
-8: {r -> R1, u -> 6, x -> 3, v -> 4, y -> 8}+660
+New answer has been found: {v -> 4, y -> 8, u -> 6, r -> R1, x -> 3}+660
+8: {v -> 4, y -> 8, u -> 6, r -> R1, x -> 3}+660
 Terms added to the base: Pos(R1, 4, 8), Free(4, 8, 0)
 Terms used in the base: R(R1, E), Pos(R1, 3, 8), Free(4, 8, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -1312,8 +1312,8 @@ No answers have been found (selected).
 Try question 20
 No answers have been found (selected).
 Try question 8
-New answer has been found: {r -> R1, x -> 4, u -> 6, y -> 8, v -> 4}+666
-8: {r -> R1, x -> 4, u -> 6, y -> 8, v -> 4}+666
+New answer has been found: {r -> R1, x -> 4, y -> 8, u -> 6, v -> 4}+666
+8: {r -> R1, x -> 4, y -> 8, u -> 6, v -> 4}+666
 Terms added to the base: Pos(R1, 5, 8), Free(5, 8, 0)
 Terms used in the base: R(R1, E), Pos(R1, 4, 8), Free(5, 8, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -1433,8 +1433,8 @@ No answers have been found (selected).
 Try question 20
 No answers have been found (selected).
 Try question 8
-New answer has been found: {y -> 8, x -> 5, u -> 6, v -> 4, r -> R1}+672
-8: {y -> 8, x -> 5, u -> 6, v -> 4, r -> R1}+672
+New answer has been found: {u -> 6, r -> R1, y -> 8, v -> 4, x -> 5}+672
+8: {u -> 6, r -> R1, y -> 8, v -> 4, x -> 5}+672
 Terms added to the base: Pos(R1, 6, 8), Free(6, 8, 0)
 Terms used in the base: R(R1, E), Pos(R1, 5, 8), Free(6, 8, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -1566,8 +1566,8 @@ No answers have been found (selected).
 Try question 9
 No answers have been found (selected).
 Try question 4
-New answer has been found: {v -> 4, x -> 6, r -> R1, y -> 8, u -> 6}+678
-4: {v -> 4, x -> 6, r -> R1, y -> 8, u -> 6}+678
+New answer has been found: {x -> 6, r -> R1, v -> 4, y -> 8, u -> 6}+678
+4: {x -> 6, r -> R1, v -> 4, y -> 8, u -> 6}+678
 Terms added to the base: R(R1, S)
 Terms used in the base: R(R1, E), Pos(R1, 6, 8), Free(7, 8, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -1699,8 +1699,8 @@ No answers have been found (selected).
 Try question 13
 No answers have been found (selected).
 Try question 9
-New answer has been found: {r -> R1, x -> 6, u -> 6, v -> 4, y -> 8}+1436
-9: {r -> R1, x -> 6, u -> 6, v -> 4, y -> 8}+1436
+New answer has been found: {x -> 6, r -> R1, y -> 8, v -> 4, u -> 6}+1436
+9: {x -> 6, r -> R1, y -> 8, v -> 4, u -> 6}+1436
 Terms added to the base: Pos(R1, 6, 7), Free(6, 7, 0)
 Terms used in the base: R(R1, S), Pos(R1, 6, 8), Free(6, 7, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -1820,8 +1820,8 @@ No answers have been found (selected).
 Try question 20
 No answers have been found (selected).
 Try question 9
-New answer has been found: {u -> 6, v -> 4, y -> 7, r -> R1, x -> 6}+1470
-9: {u -> 6, v -> 4, y -> 7, r -> R1, x -> 6}+1470
+New answer has been found: {x -> 6, y -> 7, v -> 4, r -> R1, u -> 6}+1470
+9: {x -> 6, y -> 7, v -> 4, r -> R1, u -> 6}+1470
 Terms added to the base: Pos(R1, 6, 6), Free(6, 6, 0)
 Terms used in the base: R(R1, S), Pos(R1, 6, 7), Free(6, 6, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -1951,8 +1951,8 @@ No answers have been found (selected).
 Try question 6
 No answers have been found (selected).
 Try question 13
-New answer has been found: {x -> 6, y -> 6, u -> 6, r -> R1, v -> 4}+1260
-13: {x -> 6, y -> 6, u -> 6, r -> R1, v -> 4}+1260
+New answer has been found: {r -> R1, x -> 6, y -> 6, v -> 4, u -> 6}+1260
+13: {r -> R1, x -> 6, y -> 6, v -> 4, u -> 6}+1260
 Terms added to the base: R(R1, W), AvoidM(R1)
 Terms used in the base: R(R1, S), Pos(R1, 6, 6), AppM(R1, 6, 4), Free(6, 5, 0), 
 New questions: YES. (27)-(27)
@@ -2197,8 +2197,8 @@ No answers have been found (selected).
 Try question 13
 No answers have been found (selected).
 Try question 9
-New answer has been found: {v -> 4, y -> 6, r -> R1, u -> 6, x -> 5}+1808
-9: {v -> 4, y -> 6, r -> R1, u -> 6, x -> 5}+1808
+New answer has been found: {r -> R1, u -> 6, v -> 4, x -> 5, y -> 6}+1808
+9: {r -> R1, u -> 6, v -> 4, x -> 5, y -> 6}+1808
 Terms added to the base: Pos(R1, 5, 5), Free(5, 5, 0)
 Terms used in the base: R(R1, S), Pos(R1, 5, 6), Free(5, 5, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -2322,8 +2322,8 @@ No answers have been found (selected).
 Try question 27
 No answers have been found (selected).
 Try question 9
-New answer has been found: {u -> 6, v -> 4, r -> R1, y -> 5, x -> 5}+1846
-9: {u -> 6, v -> 4, r -> R1, y -> 5, x -> 5}+1846
+New answer has been found: {v -> 4, r -> R1, x -> 5, y -> 5, u -> 6}+1846
+9: {v -> 4, r -> R1, x -> 5, y -> 5, u -> 6}+1846
 Terms added to the base: Pos(R1, 5, 4), Free(5, 4, 0)
 Terms used in the base: R(R1, S), Pos(R1, 5, 5), Free(5, 4, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -2413,8 +2413,8 @@ No answers have been found (selected).
 Try question 1
 No answers have been found (selected).
 Try question 5
-New answer has been found: {y -> 4, r -> R1, v -> 4, u -> 6, x -> 5}+1882
-5: {y -> 4, r -> R1, v -> 4, u -> 6, x -> 5}+1882
+New answer has been found: {v -> 4, r -> R1, x -> 5, y -> 4, u -> 6}+1882
+5: {v -> 4, r -> R1, x -> 5, y -> 4, u -> 6}+1882
 Terms added to the base: R(R1, W)
 Terms used in the base: R(R1, S), Pos(R1, 5, 4), Free(5, 3, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -2548,8 +2548,8 @@ No answers have been found (selected).
 Try question 11
 No answers have been found (selected).
 Try question 6
-New answer has been found: {u -> 6, y -> 6, v -> 4, r -> R1, x -> 6}+786
-6: {u -> 6, y -> 6, v -> 4, r -> R1, x -> 6}+786
+New answer has been found: {v -> 4, r -> R1, x -> 6, y -> 6, u -> 6}+786
+6: {v -> 4, r -> R1, x -> 6, y -> 6, u -> 6}+786
 Terms added to the base: R(R1, N)
 Terms used in the base: R(R1, W), Pos(R1, 6, 6), Free(5, 6, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -2683,8 +2683,8 @@ No answers have been found (selected).
 Try question 4
 No answers have been found (selected).
 Try question 11
-New answer has been found: {x -> 6, v -> 4, r -> R1, u -> 6, y -> 6}+2252
-11: {x -> 6, v -> 4, r -> R1, u -> 6, y -> 6}+2252
+New answer has been found: {v -> 4, y -> 6, u -> 6, r -> R1, x -> 6}+2252
+11: {v -> 4, y -> 6, u -> 6, r -> R1, x -> 6}+2252
 Terms added to the base: R(R1, E), AvoidM(R1)
 Terms used in the base: R(R1, N), Pos(R1, 6, 6), AppM(R1, 6, 4), Free(6, 7, 0), 
 New questions: YES. (28)-(28)
@@ -2780,8 +2780,8 @@ No answers have been found (selected).
 Try question 10
 No answers have been found (selected).
 Try question 12
-New answer has been found: {r -> R1, x -> 6, u -> 6, v -> 4, y -> 6}+892
-12: {r -> R1, x -> 6, u -> 6, v -> 4, y -> 6}+892
+New answer has been found: {x -> 6, u -> 6, v -> 4, y -> 6, r -> R1}+892
+12: {x -> 6, u -> 6, v -> 4, y -> 6, r -> R1}+892
 Terms added to the base: R(R1, S)
 Terms used in the base: R(R1, E), Pos(R1, 6, 6), AppM(R1, 6, 4), Free(7, 6, 0), 
 New questions: YES. (29)-(29)
@@ -3028,8 +3028,8 @@ No answers have been found (selected).
 Try question 29
 No answers have been found (selected).
 Try question 12
-New answer has been found: {u -> 6, v -> 4, r -> R1, x -> 6, y -> 5}+1952
-12: {u -> 6, v -> 4, r -> R1, x -> 6, y -> 5}+1952
+New answer has been found: {r -> R1, x -> 6, u -> 6, v -> 4, y -> 5}+1952
+12: {r -> R1, x -> 6, u -> 6, v -> 4, y -> 5}+1952
 Terms added to the base: R(R1, S), AvoidM(R1)
 Terms used in the base: R(R1, E), Pos(R1, 6, 5), AppM(R1, 6, 4), Free(7, 5, 0), 
 New questions: YES. (30)-(30)
@@ -3296,8 +3296,8 @@ No answers have been found (selected).
 Try question 26
 No answers have been found (selected).
 Try question 4
-New answer has been found: {x -> 6, y -> 6, v -> 4, u -> 6, r -> R1}+922
-4: {x -> 6, y -> 6, v -> 4, u -> 6, r -> R1}+922
+New answer has been found: {r -> R1, v -> 4, u -> 6, x -> 6, y -> 6}+922
+4: {r -> R1, v -> 4, u -> 6, x -> 6, y -> 6}+922
 Terms added to the base: R(R1, S)
 Terms used in the base: R(R1, E), Pos(R1, 6, 6), Free(7, 6, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -3431,8 +3431,8 @@ No answers have been found (selected).
 Try question 12
 No answers have been found (selected).
 Try question 5
-New answer has been found: {y -> 4, u -> 6, r -> R1, v -> 4, x -> 6}+3488
-5: {y -> 4, u -> 6, r -> R1, v -> 4, x -> 6}+3488
+New answer has been found: {x -> 6, y -> 4, v -> 4, u -> 6, r -> R1}+3488
+5: {x -> 6, y -> 4, v -> 4, u -> 6, r -> R1}+3488
 Terms added to the base: R(R1, W)
 Terms used in the base: R(R1, S), Pos(R1, 6, 4), Free(6, 3, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -3532,8 +3532,8 @@ No answers have been found (selected).
 Try question 10
 No answers have been found (selected).
 Try question 14
-New answer has been found: {r -> R1, x -> 6, u -> 6, y -> 5, v -> 4}+2152
-14: {r -> R1, x -> 6, u -> 6, y -> 5, v -> 4}+2152
+New answer has been found: {r -> R1, y -> 5, v -> 4, x -> 6, u -> 6}+2152
+14: {r -> R1, y -> 5, v -> 4, x -> 6, u -> 6}+2152
 Terms added to the base: R(R1, N), AvoidM(R1)
 Terms used in the base: R(R1, W), Pos(R1, 6, 5), AppM(R1, 6, 4), Free(5, 5, 0), 
 New questions: YES. (31)-(31)
@@ -3800,8 +3800,8 @@ No answers have been found (selected).
 Try question 11
 No answers have been found (selected).
 Try question 6
-New answer has been found: {v -> 4, y -> 4, u -> 6, r -> R1, x -> 5}+1460
-6: {v -> 4, y -> 4, u -> 6, r -> R1, x -> 5}+1460
+New answer has been found: {x -> 5, r -> R1, v -> 4, u -> 6, y -> 4}+1460
+6: {x -> 5, r -> R1, v -> 4, u -> 6, y -> 4}+1460
 Terms added to the base: R(R1, N)
 Terms used in the base: R(R1, W), Pos(R1, 5, 4), Free(4, 4, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -3945,8 +3945,8 @@ No answers have been found (selected).
 Try question 27
 No answers have been found (selected).
 Try question 11
-New answer has been found: {v -> 4, r -> R1, u -> 6, x -> 5, y -> 4}+3078
-11: {v -> 4, r -> R1, u -> 6, x -> 5, y -> 4}+3078
+New answer has been found: {x -> 5, v -> 4, u -> 6, r -> R1, y -> 4}+3078
+11: {x -> 5, v -> 4, u -> 6, r -> R1, y -> 4}+3078
 Terms added to the base: R(R1, E), AvoidM(R1)
 Terms used in the base: R(R1, N), Pos(R1, 5, 4), AppM(R1, 6, 4), Free(5, 5, 0), 
 New questions: YES. (32)-(32)
@@ -4201,8 +4201,8 @@ No answers have been found (selected).
 Try question 31
 No answers have been found (selected).
 Try question 11
-New answer has been found: {v -> 4, r -> R1, u -> 6, y -> 5, x -> 6}+3756
-11: {v -> 4, r -> R1, u -> 6, y -> 5, x -> 6}+3756
+New answer has been found: {v -> 4, u -> 6, r -> R1, y -> 5, x -> 6}+3756
+11: {v -> 4, u -> 6, r -> R1, y -> 5, x -> 6}+3756
 Terms added to the base: R(R1, E), AvoidM(R1)
 Terms used in the base: R(R1, N), Pos(R1, 6, 5), AppM(R1, 6, 4), Free(6, 6, 0), 
 New questions: YES. (33)-(33)
@@ -4461,8 +4461,8 @@ No answers have been found (selected).
 Try question 28
 No answers have been found (selected).
 Try question 11
-New answer has been found: {r -> R1, y -> 6, v -> 4, u -> 6, x -> 7}+4970
-11: {r -> R1, y -> 6, v -> 4, u -> 6, x -> 7}+4970
+New answer has been found: {y -> 6, v -> 4, x -> 7, u -> 6, r -> R1}+4970
+11: {y -> 6, v -> 4, x -> 7, u -> 6, r -> R1}+4970
 Terms added to the base: R(R1, E), AvoidM(R1)
 Terms used in the base: R(R1, N), Pos(R1, 7, 6), AppM(R1, 6, 4), Free(7, 7, 0), 
 New questions: YES. (34)-(34)
@@ -4727,8 +4727,8 @@ No answers have been found (selected).
 Try question 28
 No answers have been found (selected).
 Try question 11
-New answer has been found: {x -> 7, y -> 5, u -> 6, v -> 4, r -> R1}+5858
-11: {x -> 7, y -> 5, u -> 6, v -> 4, r -> R1}+5858
+New answer has been found: {y -> 5, r -> R1, u -> 6, x -> 7, v -> 4}+5858
+11: {y -> 5, r -> R1, u -> 6, x -> 7, v -> 4}+5858
 Terms added to the base: R(R1, E), AvoidM(R1)
 Terms used in the base: R(R1, N), Pos(R1, 7, 5), AppM(R1, 6, 4), Free(7, 6, 0), 
 New questions: YES. (35)-(35)
@@ -5021,8 +5021,8 @@ No answers have been found (selected).
 Try question 26
 No answers have been found (selected).
 Try question 3
-New answer has been found: {x -> 8, r -> R2, y -> 6, u -> 7, v -> 4}+1032
-3: {x -> 8, r -> R2, y -> 6, u -> 7, v -> 4}+1032
+New answer has been found: {v -> 4, y -> 6, u -> 7, r -> R2, x -> 8}+1032
+3: {v -> 4, y -> 6, u -> 7, r -> R2, x -> 8}+1032
 Terms added to the base: R(R2, E)
 Terms used in the base: R(R2, N), Pos(R2, 8, 6), Free(8, 7, 1), AppM(R2, 7, 4), 
 New questions: NO.
@@ -5156,8 +5156,8 @@ No answers have been found (selected).
 Try question 20
 No answers have been found (selected).
 Try question 3
-New answer has been found: {r -> R1, u -> 6, y -> 5, v -> 4, x -> 6}+1694
-3: {r -> R1, u -> 6, y -> 5, v -> 4, x -> 6}+1694
+New answer has been found: {x -> 6, u -> 6, r -> R1, y -> 5, v -> 4}+1694
+3: {x -> 6, u -> 6, r -> R1, y -> 5, v -> 4}+1694
 Terms added to the base: R(R1, E)
 Terms used in the base: R(R1, N), Pos(R1, 6, 5), Free(6, 6, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -5321,8 +5321,8 @@ No answers have been found (selected).
 Try question 26
 No answers have been found (selected).
 Try question 4
-New answer has been found: {y -> 6, x -> 7, u -> 7, r -> R2, v -> 4}+822
-4: {y -> 6, x -> 7, u -> 7, r -> R2, v -> 4}+822
+New answer has been found: {y -> 6, r -> R2, u -> 7, x -> 7, v -> 4}+822
+4: {y -> 6, r -> R2, u -> 7, x -> 7, v -> 4}+822
 Terms added to the base: R(R2, S)
 Terms used in the base: R(R2, E), Pos(R2, 7, 6), Free(8, 6, 1), AppM(R2, 7, 4), 
 New questions: NO.
@@ -5456,8 +5456,8 @@ No answers have been found (selected).
 Try question 20
 No answers have been found (selected).
 Try question 4
-New answer has been found: {u -> 6, x -> 6, y -> 4, v -> 4, r -> R1}+2612
-4: {u -> 6, x -> 6, y -> 4, v -> 4, r -> R1}+2612
+New answer has been found: {x -> 6, y -> 4, v -> 4, r -> R1, u -> 6}+2612
+4: {x -> 6, y -> 4, v -> 4, r -> R1, u -> 6}+2612
 Terms added to the base: R(R1, S)
 Terms used in the base: R(R1, E), Pos(R1, 6, 4), Free(7, 4, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -5623,8 +5623,8 @@ No answers have been found (selected).
 Try question 26
 No answers have been found (selected).
 Try question 13
-New answer has been found: {x -> 7, u -> 6, v -> 4, y -> 6, r -> R1}+5994
-13: {x -> 7, u -> 6, v -> 4, y -> 6, r -> R1}+5994
+New answer has been found: {r -> R1, x -> 7, y -> 6, u -> 6, v -> 4}+5994
+13: {r -> R1, x -> 7, y -> 6, u -> 6, v -> 4}+5994
 Terms added to the base: R(R1, W), AvoidM(R1)
 Terms used in the base: R(R1, S), Pos(R1, 7, 6), AppM(R1, 6, 4), Free(7, 5, 0), 
 New questions: YES. (36)-(36)
@@ -5734,8 +5734,8 @@ No answers have been found (selected).
 Try question 7
 No answers have been found (selected).
 Try question 10
-New answer has been found: {y -> 6, u -> 6, r -> R1, v -> 4, x -> 7}+3466
-10: {y -> 6, u -> 6, r -> R1, v -> 4, x -> 7}+3466
+New answer has been found: {u -> 6, v -> 4, r -> R1, x -> 7, y -> 6}+3466
+10: {u -> 6, v -> 4, r -> R1, x -> 7, y -> 6}+3466
 Terms added to the base: 
 Terms used in the base: R(R1, W), Pos(R1, 7, 6), Free(6, 6, 1), AppM(R1, 6, 4), 
 New questions: NO.
@@ -6038,8 +6038,8 @@ No answers have been found (selected).
 Try question 11
 No answers have been found (selected).
 Try question 9
-New answer has been found: {x -> 8, r -> R2, y -> 6, u -> 7, v -> 4}+2222
-9: {x -> 8, r -> R2, y -> 6, u -> 7, v -> 4}+2222
+New answer has been found: {y -> 6, x -> 8, u -> 7, r -> R2, v -> 4}+2222
+9: {y -> 6, x -> 8, u -> 7, r -> R2, v -> 4}+2222
 Terms added to the base: Pos(R2, 8, 5), Free(8, 5, 0)
 Terms used in the base: R(R2, S), Pos(R2, 8, 6), Free(8, 5, 1), AppM(R2, 7, 4), 
 New questions: NO.
@@ -6177,8 +6177,8 @@ No answers have been found (selected).
 Try question 10
 No answers have been found (selected).
 Try question 9
-New answer has been found: {r -> R2, v -> 4, u -> 7, y -> 5, x -> 8}+2386
-9: {r -> R2, v -> 4, u -> 7, y -> 5, x -> 8}+2386
+New answer has been found: {x -> 8, u -> 7, r -> R2, v -> 4, y -> 5}+2386
+9: {x -> 8, u -> 7, r -> R2, v -> 4, y -> 5}+2386
 Terms added to the base: Pos(R2, 8, 4), Free(8, 4, 0)
 Terms used in the base: R(R2, S), Pos(R2, 8, 5), Free(8, 4, 1), AppM(R2, 7, 4), 
 New questions: NO.
@@ -6316,8 +6316,8 @@ No answers have been found (selected).
 Try question 10
 No answers have been found (selected).
 Try question 9
-New answer has been found: {x -> 6, v -> 4, u -> 6, y -> 6, r -> R1}+3502
-9: {x -> 6, v -> 4, u -> 6, y -> 6, r -> R1}+3502
+New answer has been found: {u -> 6, v -> 4, r -> R1, y -> 6, x -> 6}+3502
+9: {u -> 6, v -> 4, r -> R1, y -> 6, x -> 6}+3502
 Terms added to the base: 
 Terms used in the base: R(R1, S), Pos(R1, 6, 6), Free(6, 5, 1), AppM(R1, 6, 4), 
 New questions: NO.

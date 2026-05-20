@@ -5397,7 +5397,7 @@
     {
       "step": 0,
       "question": 2,
-      "answer": "{x1 -> 6, d2 -> E, x2 -> 2, y2 -> 3, d3 -> S, d1 -> N, y1 -> 5}+72",
+      "answer": "{d1 -> N, x1 -> 6, d3 -> S, x2 -> 2, y2 -> 3, y1 -> 5, d2 -> E}+72",
       "atoms_added": [
         {
           "name": "AppM",
@@ -7059,7 +7059,7 @@
     {
       "step": 1,
       "question": 3,
-      "answer": "{x -> 1, v -> 4, y -> 8, u -> 6, r -> R1}+254",
+      "answer": "{x -> 1, u -> 6, r -> R1, v -> 4, y -> 8}+254",
       "atoms_added": [
         {
           "name": "R",
@@ -8710,7 +8710,7 @@
     {
       "step": 2,
       "question": 4,
-      "answer": "{r -> R2, x -> 7, u -> 7, v -> 4, y -> 7}+306",
+      "answer": "{u -> 7, y -> 7, x -> 7, v -> 4, r -> R2}+306",
       "atoms_added": [
         {
           "name": "R",
@@ -10375,7 +10375,7 @@
     {
       "step": 3,
       "question": 8,
-      "answer": "{y -> 8, r -> R1, v -> 4, u -> 6, x -> 1}+456",
+      "answer": "{x -> 1, r -> R1, u -> 6, v -> 4, y -> 8}+456",
       "atoms_added": [
         {
           "name": "Pos",
@@ -12091,7 +12091,7 @@
     {
       "step": 4,
       "question": 9,
-      "answer": "{x -> 7, u -> 7, v -> 4, r -> R2, y -> 7}+1098",
+      "answer": "{r -> R2, u -> 7, y -> 7, x -> 7, v -> 4}+1098",
       "atoms_added": [
         {
           "name": "Pos",
@@ -13841,7 +13841,7 @@
     {
       "step": 5,
       "question": 13,
-      "answer": "{v -> 4, y -> 6, r -> R2, x -> 7, u -> 7}+1104",
+      "answer": "{u -> 7, v -> 4, y -> 6, r -> R2, x -> 7}+1104",
       "atoms_added": [
         {
           "name": "R",
@@ -15607,7 +15607,7 @@
     {
       "step": 6,
       "question": 6,
-      "answer": "{u -> 7, v -> 4, r -> R2, x -> 7, y -> 6}+692",
+      "answer": "{x -> 7, y -> 6, r -> R2, u -> 7, v -> 4}+692",
       "atoms_added": [
         {
           "name": "R",
@@ -17379,7 +17379,7 @@
     {
       "step": 7,
       "question": 11,
-      "answer": "{r -> R2, x -> 7, y -> 6, u -> 7, v -> 4}+682",
+      "answer": "{v -> 4, x -> 7, u -> 7, y -> 6, r -> R2}+682",
       "atoms_added": [
         {
           "name": "R",
@@ -20993,7 +20993,7 @@
     {
       "step": 9,
       "question": 8,
-      "answer": "{r -> R1, x -> 2, y -> 8, u -> 6, v -> 4}+636",
+      "answer": "{r -> R1, u -> 6, v -> 4, x -> 2, y -> 8}+636",
       "atoms_added": [
         {
           "name": "Pos",
@@ -22878,7 +22878,7 @@
     {
       "step": 10,
       "question": 8,
-      "answer": "{r -> R1, u -> 6, x -> 3, v -> 4, y -> 8}+660",
+      "answer": "{v -> 4, y -> 8, u -> 6, r -> R1, x -> 3}+660",
       "atoms_added": [
         {
           "name": "Pos",
@@ -24797,7 +24797,7 @@
     {
       "step": 11,
       "question": 8,
-      "answer": "{r -> R1, x -> 4, u -> 6, y -> 8, v -> 4}+666",
+      "answer": "{r -> R1, x -> 4, y -> 8, u -> 6, v -> 4}+666",
       "atoms_added": [
         {
           "name": "Pos",
@@ -26750,7 +26750,7 @@
     {
       "step": 12,
       "question": 8,
-      "answer": "{y -> 8, x -> 5, u -> 6, v -> 4, r -> R1}+672",
+      "answer": "{u -> 6, r -> R1, y -> 8, v -> 4, x -> 5}+672",
       "atoms_added": [
         {
           "name": "Pos",
@@ -28737,7 +28737,7 @@
     {
       "step": 13,
       "question": 4,
-      "answer": "{v -> 4, x -> 6, r -> R1, y -> 8, u -> 6}+678",
+      "answer": "{x -> 6, r -> R1, v -> 4, y -> 8, u -> 6}+678",
       "atoms_added": [
         {
           "name": "R",
@@ -30721,7 +30721,7 @@
     {
       "step": 14,
       "question": 9,
-      "answer": "{r -> R1, x -> 6, u -> 6, v -> 4, y -> 8}+1436",
+      "answer": "{x -> 6, r -> R1, y -> 8, v -> 4, u -> 6}+1436",
       "atoms_added": [
         {
           "name": "Pos",
@@ -32756,7 +32756,7 @@
     {
       "step": 15,
       "question": 9,
-      "answer": "{u -> 6, v -> 4, y -> 7, r -> R1, x -> 6}+1470",
+      "answer": "{x -> 6, y -> 7, v -> 4, r -> R1, u -> 6}+1470",
       "atoms_added": [
         {
           "name": "Pos",
@@ -34825,7 +34825,7 @@
     {
       "step": 16,
       "question": 13,
-      "answer": "{x -> 6, y -> 6, u -> 6, r -> R1, v -> 4}+1260",
+      "answer": "{r -> R1, x -> 6, y -> 6, v -> 4, u -> 6}+1260",
       "atoms_added": [
         {
           "name": "R",
@@ -39029,7 +39029,7 @@
     {
       "step": 18,
       "question": 9,
-      "answer": "{v -> 4, y -> 6, r -> R1, u -> 6, x -> 5}+1808",
+      "answer": "{r -> R1, u -> 6, v -> 4, x -> 5, y -> 6}+1808",
       "atoms_added": [
         {
           "name": "Pos",
@@ -41205,7 +41205,7 @@
     {
       "step": 19,
       "question": 9,
-      "answer": "{u -> 6, v -> 4, r -> R1, y -> 5, x -> 5}+1846",
+      "answer": "{v -> 4, r -> R1, x -> 5, y -> 5, u -> 6}+1846",
       "atoms_added": [
         {
           "name": "Pos",
@@ -43415,7 +43415,7 @@
     {
       "step": 20,
       "question": 5,
-      "answer": "{y -> 4, r -> R1, v -> 4, u -> 6, x -> 5}+1882",
+      "answer": "{v -> 4, r -> R1, x -> 5, y -> 4, u -> 6}+1882",
       "atoms_added": [
         {
           "name": "R",
@@ -45622,7 +45622,7 @@
     {
       "step": 21,
       "question": 6,
-      "answer": "{u -> 6, y -> 6, v -> 4, r -> R1, x -> 6}+786",
+      "answer": "{v -> 4, r -> R1, x -> 6, y -> 6, u -> 6}+786",
       "atoms_added": [
         {
           "name": "R",
@@ -47843,7 +47843,7 @@
     {
       "step": 22,
       "question": 11,
-      "answer": "{x -> 6, v -> 4, r -> R1, u -> 6, y -> 6}+2252",
+      "answer": "{v -> 4, y -> 6, u -> 6, r -> R1, x -> 6}+2252",
       "atoms_added": [
         {
           "name": "R",
@@ -50097,7 +50097,7 @@
     {
       "step": 23,
       "question": 12,
-      "answer": "{r -> R1, x -> 6, u -> 6, v -> 4, y -> 6}+892",
+      "answer": "{x -> 6, u -> 6, v -> 4, y -> 6, r -> R1}+892",
       "atoms_added": [
         {
           "name": "R",
@@ -54628,7 +54628,7 @@
     {
       "step": 25,
       "question": 12,
-      "answer": "{u -> 6, v -> 4, r -> R1, x -> 6, y -> 5}+1952",
+      "answer": "{r -> R1, x -> 6, u -> 6, v -> 4, y -> 5}+1952",
       "atoms_added": [
         {
           "name": "R",
@@ -59310,7 +59310,7 @@
     {
       "step": 27,
       "question": 4,
-      "answer": "{x -> 6, y -> 6, v -> 4, u -> 6, r -> R1}+922",
+      "answer": "{r -> R1, v -> 4, u -> 6, x -> 6, y -> 6}+922",
       "atoms_added": [
         {
           "name": "R",
@@ -61688,7 +61688,7 @@
     {
       "step": 28,
       "question": 5,
-      "answer": "{y -> 4, u -> 6, r -> R1, v -> 4, x -> 6}+3488",
+      "answer": "{x -> 6, y -> 4, v -> 4, u -> 6, r -> R1}+3488",
       "atoms_added": [
         {
           "name": "R",
@@ -64080,7 +64080,7 @@
     {
       "step": 29,
       "question": 14,
-      "answer": "{r -> R1, x -> 6, u -> 6, y -> 5, v -> 4}+2152",
+      "answer": "{r -> R1, y -> 5, v -> 4, x -> 6, u -> 6}+2152",
       "atoms_added": [
         {
           "name": "R",
@@ -68902,7 +68902,7 @@
     {
       "step": 31,
       "question": 6,
-      "answer": "{v -> 4, y -> 4, u -> 6, r -> R1, x -> 5}+1460",
+      "answer": "{x -> 5, r -> R1, v -> 4, u -> 6, y -> 4}+1460",
       "atoms_added": [
         {
           "name": "R",
@@ -71347,7 +71347,7 @@
     {
       "step": 32,
       "question": 11,
-      "answer": "{v -> 4, r -> R1, u -> 6, x -> 5, y -> 4}+3078",
+      "answer": "{x -> 5, v -> 4, u -> 6, r -> R1, y -> 4}+3078",
       "atoms_added": [
         {
           "name": "R",
@@ -76306,7 +76306,7 @@
     {
       "step": 34,
       "question": 11,
-      "answer": "{v -> 4, r -> R1, u -> 6, y -> 5, x -> 6}+3756",
+      "answer": "{v -> 4, u -> 6, r -> R1, y -> 5, x -> 6}+3756",
       "atoms_added": [
         {
           "name": "R",
@@ -81377,7 +81377,7 @@
     {
       "step": 36,
       "question": 11,
-      "answer": "{r -> R1, y -> 6, v -> 4, u -> 6, x -> 7}+4970",
+      "answer": "{y -> 6, v -> 4, x -> 7, u -> 6, r -> R1}+4970",
       "atoms_added": [
         {
           "name": "R",
@@ -86560,7 +86560,7 @@
     {
       "step": 38,
       "question": 11,
-      "answer": "{x -> 7, y -> 5, u -> 6, v -> 4, r -> R1}+5858",
+      "answer": "{y -> 5, r -> R1, u -> 6, x -> 7, v -> 4}+5858",
       "atoms_added": [
         {
           "name": "R",
@@ -91855,7 +91855,7 @@
     {
       "step": 40,
       "question": 3,
-      "answer": "{x -> 8, r -> R2, y -> 6, u -> 7, v -> 4}+1032",
+      "answer": "{v -> 4, y -> 6, u -> 7, r -> R2, x -> 8}+1032",
       "atoms_added": [
         {
           "name": "R",
@@ -94538,7 +94538,7 @@
     {
       "step": 41,
       "question": 3,
-      "answer": "{r -> R1, u -> 6, y -> 5, v -> 4, x -> 6}+1694",
+      "answer": "{x -> 6, u -> 6, r -> R1, y -> 5, v -> 4}+1694",
       "atoms_added": [
         {
           "name": "R",
@@ -97235,7 +97235,7 @@
     {
       "step": 42,
       "question": 4,
-      "answer": "{y -> 6, x -> 7, u -> 7, r -> R2, v -> 4}+822",
+      "answer": "{y -> 6, r -> R2, u -> 7, x -> 7, v -> 4}+822",
       "atoms_added": [
         {
           "name": "R",
@@ -99946,7 +99946,7 @@
     {
       "step": 43,
       "question": 4,
-      "answer": "{u -> 6, x -> 6, y -> 4, v -> 4, r -> R1}+2612",
+      "answer": "{x -> 6, y -> 4, v -> 4, r -> R1, u -> 6}+2612",
       "atoms_added": [
         {
           "name": "R",
@@ -102671,7 +102671,7 @@
     {
       "step": 44,
       "question": 13,
-      "answer": "{x -> 7, u -> 6, v -> 4, y -> 6, r -> R1}+5994",
+      "answer": "{r -> R1, x -> 7, y -> 6, u -> 6, v -> 4}+5994",
       "atoms_added": [
         {
           "name": "R",
@@ -105429,7 +105429,7 @@
     {
       "step": 45,
       "question": 10,
-      "answer": "{y -> 6, u -> 6, r -> R1, v -> 4, x -> 7}+3466",
+      "answer": "{u -> 6, v -> 4, r -> R1, x -> 7, y -> 6}+3466",
       "atoms_added": [],
       "atoms_used": [
         {
@@ -110897,7 +110897,7 @@
     {
       "step": 47,
       "question": 9,
-      "answer": "{x -> 8, r -> R2, y -> 6, u -> 7, v -> 4}+2222",
+      "answer": "{y -> 6, x -> 8, u -> 7, r -> R2, v -> 4}+2222",
       "atoms_added": [
         {
           "name": "Pos",
@@ -113712,7 +113712,7 @@
     {
       "step": 48,
       "question": 9,
-      "answer": "{r -> R2, v -> 4, u -> 7, y -> 5, x -> 8}+2386",
+      "answer": "{x -> 8, u -> 7, r -> R2, v -> 4, y -> 5}+2386",
       "atoms_added": [
         {
           "name": "Pos",
@@ -116561,7 +116561,7 @@
     {
       "step": 49,
       "question": 9,
-      "answer": "{x -> 6, v -> 4, u -> 6, y -> 6, r -> R1}+3502",
+      "answer": "{u -> 6, v -> 4, r -> R1, y -> 6, x -> 6}+3502",
       "atoms_added": [],
       "atoms_used": [
         {
