@@ -54,26 +54,48 @@ commands: Vec<PlainTerm> = {
 
 
 terms: Vec<PlainTerm> = {
-    <t: gterm> => vec!(t),
-    <t: gterm> "," <ts: terms> => { let mut ts = ts; ts.insert(0, t); ts }	
+    <t: exprterm> => vec!(t),
+    <t: exprterm> "," <ts: terms> => { let mut ts = ts; ts.insert(0, t); ts }	
 }
 
+
+exprterm: PlainTerm = {
+	<t: cmpterm> => t,
+	<t: arithterm> => t,
+}
+
+cmpterm: PlainTerm = {
+	<a1: arithterm> <cmpop:cmpop> <a2: arithterm> => PlainTerm::new_infix(cmpop, vec![a1, a2]),
+}
+
+arithterm: PlainTerm = {
+	<a1: pterm> <infterm:infterm> <a2: arithterm> => PlainTerm::new_infix(infterm, vec![a1, a2]),
+	<t: pterm> => t,
+}
 
 pterm: PlainTerm = {
-	<s: symbol> => PlainTerm::new(s.parse().unwrap(),vec![]),
-	<s: symbol> "(" <a: terms> ")" => PlainTerm::new(s.parse().unwrap(),a),
+	<s: symbol> => PlainTerm::new(s.parse().unwrap(),vec![], false),
+	<s: symbol> "(" <a: terms> ")" => PlainTerm::new(s.parse().unwrap(),a, true),
 }
 
-infix_pterm: PlainTerm = {
-	<a1: pterm> "++" <a2: pterm> => PlainTerm::new("++".to_string(),vec![a1,a2]),
+infterm:String = {
+	"++" => "++".to_string(),
+	"<f" => "<f".to_string(),
+	">f" => ">f".to_string(),
+	"<=f" => "<=f".to_string(),
+	">=f" => ">=f".to_string(),
 }
 
-gterm: PlainTerm = {
-	<t: pterm> => t,
-	<t: infix_pterm> => t,
+cmpop:String = {
+	">" => ">".to_string(),
+	"<" => "<".to_string(),
+	">=" => ">=".to_string(),
+	"<=" => "<=".to_string(),
+	"==" => "==".to_string(),
+	"!=" => "!=".to_string(),
 }
 
 
 symbol: String = {
-    <s: r#"["=<>+$a-zA-Z0-9_][=<>+a-zA-Z0-9_"]*"#> => s.to_string(),
+    <s: r#"[=<>+$a-zA-Z0-9_][=<>+fa-zA-Z0-9_]*"#> => s.to_string(),
 };
