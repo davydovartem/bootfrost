@@ -540,6 +540,23 @@ fn eq(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 	env.psterms.get_tid(Term::Bool(res)).unwrap()
 }
 
+fn or_bool(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
+	if args.len() != 2{
+		panic!("");
+	}
+
+	let arg0 = env.psterms.get_term(&args[0]);
+	let arg1 = env.psterms.get_term(&args[1]);
+
+	let (b0, b1) = if let (Term::Bool(_b0), Term::Bool(_b1)) = (arg0, arg1){
+		(_b0, _b1)
+	}else{
+		panic!("");
+	};
+
+	env.psterms.get_tid(Term::Bool(b0 || b1)).unwrap()
+}
+
 fn dist(args: &Vec<TermId>, env: &mut PEnv) -> TermId {
     if args.len() != 4 {
         panic!("Функция dist требует ровно 4 аргумента: x0, y0, x1, y1");
@@ -596,6 +613,7 @@ pub fn init() -> (PSTerms, HashMap<String, SymbolId>){
 	let fs = HashMap::from([
 		("!=".to_string(), (noteq as IFunction, Position::Infix)),
 		("==".to_string(), (eq as IFunction, Position::Infix)),
+		("or".to_string(), (or_bool as IFunction, Position::Classic)),
 		("+".to_string(), (ifunction_binary_integers!(plus, i64) as IFunction, Position::Infix)),
 		("-".to_string(), (ifunction_binary_integers!(minus, i64) as IFunction, Position::Infix)),
 		("*".to_string(), (ifunction_binary_integers!(multiply, i64) as IFunction, Position::Infix)),

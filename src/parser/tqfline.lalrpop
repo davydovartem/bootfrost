@@ -23,6 +23,16 @@ terms: Vec<PlainTerm> = {
     <t: gterm> "," <ts: terms> => { let mut ts = ts; ts.insert(0, t); ts }	
 }
 
+call_terms: Vec<PlainTerm> = {
+    <t: call_arg> => vec!(t),
+    <t: call_arg> "," <ts: call_terms> => { let mut ts = ts; ts.insert(0, t); ts }
+}
+
+call_arg: PlainTerm = {
+	<t: gterm> => t,
+	<a1: gterm> <infatom:infatom> <a2: gterm> => PlainTerm::new_infix(infatom,vec![a1,a2]),
+}
+
 vars: Vec<PlainTerm> = {
 	<t: symbol> => vec!(PlainTerm::new(t,vec![], false)),
 	<t: symbol> "," <ts: vars> => { let mut ts = ts; ts.insert(0, PlainTerm::new(t,vec![], false)); ts }		
@@ -33,18 +43,17 @@ atoms: Vec<PlainTerm> = {
     <t: atom> "," <ts: atoms> => { let mut ts = ts; ts.insert(0, t); ts }	
 }
 
-
 atom: PlainTerm = {
 	<s: symbol> "(" ")" => PlainTerm::new(s.parse().unwrap(),vec![], true),
-	<s: symbol> "(" <a: terms> ")" => PlainTerm::new(s.parse().unwrap(),a, true),
+	<s: symbol> "(" <a: call_terms> ")" => PlainTerm::new(s.parse().unwrap(),a, true),
 	<a1: gterm> <infatom:infatom> <a2: gterm> => PlainTerm::new_infix(infatom,vec![a1,a2]),
 }
 
 pterm: PlainTerm = {
 	<s: symbol> => PlainTerm::new(s.parse().unwrap(),vec![], false),
 	<s: symbol> "(" ")" => PlainTerm::new(s.parse().unwrap(),vec![], true),
-	<s: symbol> "(" <a: terms> ")" => PlainTerm::new(s.parse().unwrap(),a, true),
-	"[" <a: terms> "]" => PlainTerm::new("__LIST__".to_string(),a,true),
+	<s: symbol> "(" <a: call_terms> ")" => PlainTerm::new(s.parse().unwrap(),a, true),
+	"[" <a: call_terms> "]" => PlainTerm::new("__LIST__".to_string(),a,true),
 	"[" "]" => PlainTerm::new("__LIST__".to_string(),vec![],true),
 }
 

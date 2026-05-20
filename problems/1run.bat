@@ -1,1 +1,1 @@
-..\target\debug\bootfrost.exe -s general -l 50 -f %1 -j > %2.log.pcsf
+..\target\debug\bootfrost.exe -s general -l 50 -f BlockMovePlanning.pcsf -j > BlockMovePlanning.log.pcsf

@@ -61,6 +61,7 @@ impl Solver{
 			},
 			Term::Bool(b) => JsonTerm::leaf(b.to_string()),
 			Term::Integer(i) => JsonTerm::leaf(i.to_string()),
+			Term::Float(f) => JsonTerm::leaf(f.to_string()),
 			Term::String(s) => JsonTerm::leaf(s),
 			Term::SFunctor(sid, args) | Term::IFunctor(sid, args) => {
 				JsonTerm::node(
