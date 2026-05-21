@@ -12,6 +12,7 @@ use crate::strategies::answer_validators::*;
 use std::io::stdin;
 
 
+#[derive(Clone)]
 pub struct StrategyItem{
 	pub qid: QuestionId,
 	pub selector: SelectorStrategy,
@@ -27,7 +28,7 @@ pub enum SelectorStrategy{
 	Best(fn(&Vec<Answer>, &Vec<Answer>, usize, &PSTerms) -> AnswerOption),
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum StartFrom{
 	Last,
 	Scratch,

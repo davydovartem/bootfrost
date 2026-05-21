@@ -34,6 +34,10 @@ TEXT = "#111827"
 MUTED = "#4b5563"
 PANEL_BG = "#ffffff"
 PANEL_BORDER = "#d1d5db"
+COLLISION_FILL = (220, 38, 38, 72)
+COLLISION_OUTLINE = "#dc2626"
+MISSING_FREE_FILL = (245, 158, 11, 72)
+MISSING_FREE_OUTLINE = "#f59e0b"
 
 CELL_SIZE = 56
 MARGIN_LEFT = 56
@@ -135,6 +139,21 @@ def infer_entities(atoms: list[dict[str, Any]]) -> set[str]:
     return entities
 
 
+def scene_summary(state: "SceneState") -> list[str]:
+    robots = []
+    for robot in state.robots:
+        pos = state.positions.get(robot)
+        direction = state.robot_dirs.get(robot, "?")
+        if pos:
+            robots.append(f"{robot} @ ({pos[0]}, {pos[1]}) dir={direction}")
+    blocks = []
+    for block in state.blocks:
+        pos = state.positions.get(block)
+        if pos:
+            blocks.append(f"{block} @ ({pos[0]}, {pos[1]}) cells=({pos[0]}, {pos[1]})-({pos[0] + 1}, {pos[1]})")
+    return robots + blocks
+
+
 @dataclass(frozen=True)
 class SceneState:
     width: int
@@ -142,6 +161,8 @@ class SceneState:
     positions: dict[str, tuple[int, int]]
     robot_dirs: dict[str, str]
     free_cells: dict[tuple[int, int], int]
+    free_collisions: set[tuple[int, int]]
+    free_missing: set[tuple[int, int]]
     robots: list[str]
     blocks: list[str]
 
@@ -149,6 +170,7 @@ class SceneState:
 @dataclass(frozen=True)
 class Frame:
     index: int
+    step_number: int | None
     label: str
     answer: str
     question: int | None
@@ -161,12 +183,14 @@ class Frame:
     used_entities: set[str]
 
 
-def build_state(active_atoms: list[dict[str, Any]]) -> SceneState:
+def build_state(active_atoms: list[dict[str, Any]], *, default_width: int | None = None, default_height: int | None = None) -> SceneState:
     width = 0
     height = 0
     positions: dict[str, tuple[int, int]] = {}
     robot_dirs: dict[str, str] = {}
     free_cells: dict[tuple[int, int], int] = {}
+    free_collisions: set[tuple[int, int]] = set()
+    free_missing: set[tuple[int, int]] = set()
     robots: set[str] = set()
     blocks: set[str] = set()
 
@@ -185,10 +209,26 @@ def build_state(active_atoms: list[dict[str, Any]]) -> SceneState:
         elif name == "Pos" and len(args) == 3 and is_int_text(args[1]) and is_int_text(args[2]):
             positions[args[0]] = (int(args[1]), int(args[2]))
         elif name == "Free" and len(args) == 3 and all(is_int_text(value) for value in args):
-            free_cells[(int(args[0]), int(args[1]))] = int(args[2])
+            key = (int(args[0]), int(args[1]))
+            value = int(args[2])
+            existing = free_cells.get(key)
+            if existing is not None and existing != value:
+                free_collisions.add(key)
+            else:
+                free_cells[key] = value
+
+    if width <= 0 and default_width is not None:
+        width = default_width
+    if height <= 0 and default_height is not None:
+        height = default_height
 
     if width <= 0 or height <= 0:
         raise ValueError("Could not infer scene dimensions from active atoms")
+
+    for x in range(1, width + 1):
+        for y in range(1, height + 1):
+            if (x, y) not in free_cells:
+                free_missing.add((x, y))
 
     return SceneState(
         width=width,
@@ -196,6 +236,8 @@ def build_state(active_atoms: list[dict[str, Any]]) -> SceneState:
         positions=positions,
         robot_dirs=robot_dirs,
         free_cells=free_cells,
+        free_collisions=free_collisions,
+        free_missing=free_missing,
         robots=sorted(robots),
         blocks=sorted(blocks),
     )
@@ -212,7 +254,8 @@ def load_frames(log_path: Path) -> tuple[list[Frame], set[tuple[int, int]]]:
     frames.append(
         Frame(
             index=0,
-            label="Initial",
+            step_number=None,
+            label="Старт",
             answer="Initial base from formula.children[0].atoms_list",
             question=None,
             added_atoms=[],
@@ -226,24 +269,42 @@ def load_frames(log_path: Path) -> tuple[list[Frame], set[tuple[int, int]]]:
     )
 
     previous_keys = initial_keys
+    previous_atoms = initial_atoms
+    previous_state = initial_state
     for offset, step in enumerate(data.get("log") or [], start=1):
-        active_atoms = active_atoms_from_base(step.get("base") or [])
-        active_keys = {atom_to_text(atom) for atom in active_atoms}
-        removed_atoms = sorted(previous_keys - active_keys)
-        previous_keys = active_keys
+        base_entries = step.get("base")
+        if not base_entries:
+            active_atoms = previous_atoms
+            active_keys = previous_keys
+            removed_atoms: list[str] = []
+        else:
+            active_atoms = active_atoms_from_base(base_entries)
+            active_keys = {atom_to_text(atom) for atom in active_atoms}
+            removed_atoms = sorted(previous_keys - active_keys)
+            previous_keys = active_keys
+            previous_atoms = active_atoms
+
         added_atoms = step.get("atoms_added") or []
         used_atoms = step.get("atoms_used") or []
+        step_number = step.get("step", offset - 1)
+        try:
+            step_number_int = int(step_number)
+        except (TypeError, ValueError):
+            step_number_int = offset - 1
+        state = build_state(active_atoms, default_width=previous_state.width, default_height=previous_state.height)
+        previous_state = state
         frames.append(
             Frame(
                 index=offset,
-                label=f"Step {step.get('step', offset - 1)}",
+                step_number=step_number_int,
+                label=f"Шаг {step_number_int}",
                 answer=str(step.get("answer", "")),
                 question=step.get("question"),
                 added_atoms=added_atoms,
                 used_atoms=used_atoms,
                 removed_atoms=removed_atoms,
                 active_atoms=active_atoms,
-                state=build_state(active_atoms),
+                state=state,
                 added_entities=infer_entities(added_atoms),
                 used_entities=infer_entities(used_atoms),
             )
@@ -277,10 +338,22 @@ class SceneRenderer:
         return ImageFont.load_default()
 
     def render(self, frame: Frame) -> Image.Image:
+        return self.render_full(frame)
+
+    def render_scene(self, frame: Frame) -> Image.Image:
+        scene_width = MARGIN_LEFT + frame.state.width * CELL_SIZE + MARGIN_RIGHT
+        scene_height = MARGIN_TOP + frame.state.height * CELL_SIZE + MARGIN_BOTTOM
+
+        image = Image.new("RGBA", (scene_width, scene_height), "#eef2f7")
+        draw = ImageDraw.Draw(image)
+        self._draw_scene(draw, frame, scene_width, scene_height)
+        return image
+
+    def render_full(self, frame: Frame) -> Image.Image:
         scene_width = MARGIN_LEFT + frame.state.width * CELL_SIZE + MARGIN_RIGHT
         scene_height = MARGIN_TOP + frame.state.height * CELL_SIZE + MARGIN_BOTTOM
         total_width = scene_width + PANEL_GAP + PANEL_WIDTH
-        total_height = max(scene_height, 860)
+        total_height = max(scene_height, 860, self._estimate_full_height(frame))
 
         image = Image.new("RGBA", (total_width, total_height), "#eef2f7")
         draw = ImageDraw.Draw(image)
@@ -289,11 +362,17 @@ class SceneRenderer:
         self._draw_panel(draw, frame, scene_width + PANEL_GAP, total_height)
         return image
 
+    def _estimate_full_height(self, frame: Frame) -> int:
+        lines = 26
+        lines += len(frame.added_atoms)
+        lines += len(frame.used_atoms)
+        lines += len(frame.removed_atoms)
+        lines += len(scene_summary(frame.state))
+        return 34 * lines
+
     def _draw_scene(self, draw: ImageDraw.ImageDraw, frame: Frame, scene_width: int, scene_height: int) -> None:
         draw.rounded_rectangle((18, 18, scene_width - 18, scene_height - 18), radius=20, fill=PANEL_BG, outline=PANEL_BORDER, width=2)
-        draw.text((MARGIN_LEFT, 20), "Block Move Planning", fill=TEXT, font=self.title_font)
-        subtitle = f"{frame.label}   q={frame.question if frame.question is not None else '-'}"
-        draw.text((MARGIN_LEFT, 54), subtitle, fill=MUTED, font=self.small_font)
+        draw.text((MARGIN_LEFT, 20), self._scene_title(frame), fill=TEXT, font=self.title_font)
 
         for x in range(1, frame.state.width + 1):
             for y in range(1, frame.state.height + 1):
@@ -306,15 +385,20 @@ class SceneRenderer:
             if 1 <= x <= frame.state.width and 1 <= y <= frame.state.height:
                 draw.rounded_rectangle(self._cell_box(x, y, frame.state.height), radius=8, fill=TARGET_FILL, outline=TARGET_OUTLINE, width=2)
 
+        for x, y in frame.state.free_missing:
+            if 1 <= x <= frame.state.width and 1 <= y <= frame.state.height:
+                draw.rectangle(self._cell_box(x, y, frame.state.height), fill=MISSING_FREE_FILL, outline=MISSING_FREE_OUTLINE, width=3)
+
+        for x, y in frame.state.free_collisions:
+            if 1 <= x <= frame.state.width and 1 <= y <= frame.state.height:
+                draw.rectangle(self._cell_box(x, y, frame.state.height), fill=COLLISION_FILL, outline=COLLISION_OUTLINE, width=3)
+
         for x in range(1, frame.state.width + 1):
             cell = self._cell_box(x, 1, frame.state.height)
             draw.text((cell[0] + CELL_SIZE / 2 - 5, scene_height - MARGIN_BOTTOM + 12), str(x), fill=MUTED, font=self.small_font)
         for y in range(1, frame.state.height + 1):
             cell = self._cell_box(1, y, frame.state.height)
             draw.text((20, cell[1] + CELL_SIZE / 2 - 9), str(y), fill=MUTED, font=self.small_font)
-
-        draw.text((scene_width / 2 - 10, scene_height - 34), "X", fill=MUTED, font=self.small_font)
-        draw.text((24, 86), "Y", fill=MUTED, font=self.small_font)
 
         for block in frame.state.blocks:
             if block in frame.state.positions:
@@ -329,8 +413,10 @@ class SceneRenderer:
 
         y = 28
         y = self._draw_wrapped(draw, panel_left + 20, y, panel_right - 20, f"{frame.label}", self.title_font, TEXT)
+        if frame.question is not None:
+            y = self._draw_wrapped(draw, panel_left + 20, y + 24, panel_right - 20, f"Question: {frame.question}", self.small_font, MUTED)
         if frame.answer:
-            y = self._draw_wrapped(draw, panel_left + 20, y + 6, panel_right - 20, f"Answer: {frame.answer}", self.small_font, MUTED)
+            y = self._draw_wrapped(draw, panel_left + 20, y + 10, panel_right - 20, f"Answer: {frame.answer}", self.small_font, MUTED)
 
         panel_items = [
             ("Added atoms", [atom_to_text(atom) for atom in frame.added_atoms], ADDED_HIGHLIGHT),
@@ -366,19 +452,13 @@ class SceneRenderer:
             draw.text((panel_left + 52, legend_y), label, fill=MUTED, font=self.small_font)
             legend_y += 24
 
+    def _scene_title(self, frame: Frame) -> str:
+        if frame.step_number is None:
+            return "Block Move Planning (старт)"
+        return f"Block Move Planning ({frame.step_number})"
+
     def _scene_summary(self, state: SceneState) -> list[str]:
-        robots = []
-        for robot in state.robots:
-            pos = state.positions.get(robot)
-            direction = state.robot_dirs.get(robot, "?")
-            if pos:
-                robots.append(f"{robot} @ ({pos[0]}, {pos[1]}) dir={direction}")
-        blocks = []
-        for block in state.blocks:
-            pos = state.positions.get(block)
-            if pos:
-                blocks.append(f"{block} @ ({pos[0]}, {pos[1]}) cells=({pos[0]}, {pos[1]})-({pos[0] + 1}, {pos[1]})")
-        return robots + blocks
+        return scene_summary(state)
 
     def _draw_bullet(self, draw: ImageDraw.ImageDraw, x: int, y: int, max_x: int, text: str) -> int:
         draw.text((x, y), "- ", fill=TEXT, font=self.small_font)
@@ -489,7 +569,7 @@ class ViewerApp:
         self.photo: ImageTk.PhotoImage | None = None
 
         self.root.title("Block Move Planning Viewer")
-        self.root.geometry("1600x980")
+        self.root.geometry("1200x760")
         self.root.minsize(1200, 760)
 
         outer = ttk.Frame(root, padding=10)
@@ -506,8 +586,18 @@ class ViewerApp:
         self.status_var = tk.StringVar()
         ttk.Label(controls, textvariable=self.status_var).pack(side=tk.RIGHT)
 
-        self.canvas = tk.Canvas(outer, background="#eef2f7", highlightthickness=0)
-        self.canvas.pack(fill=tk.BOTH, expand=True, pady=(10, 0))
+        body = ttk.Frame(outer)
+        body.pack(fill=tk.BOTH, expand=True, pady=(10, 0))
+        body.columnconfigure(0, weight=1)
+        body.columnconfigure(1, weight=0)
+        body.rowconfigure(0, weight=1)
+
+        self.canvas = tk.Canvas(body, background="#eef2f7", highlightthickness=0)
+        self.canvas.grid(row=0, column=0, sticky="nsew")
+
+        self.right_panel = RightPanel(body, width=520)
+        self.right_panel.grid(row=0, column=1, sticky="ns", padx=(12, 0))
+        self.right_panel.grid_propagate(False)
 
         self.root.bind("<Left>", lambda _event: self.prev_frame())
         self.root.bind("<Right>", lambda _event: self.next_frame())
@@ -538,12 +628,13 @@ class ViewerApp:
 
     def refresh(self) -> None:
         frame = self.current_frame()
-        image = self.renderer.render(frame).convert("RGB")
+        image = self.renderer.render_scene(frame).convert("RGB")
         self.photo = ImageTk.PhotoImage(image)
         self.canvas.delete("all")
         self.canvas.config(scrollregion=(0, 0, image.width, image.height))
         self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
         self.status_var.set(f"{self.current_index + 1}/{len(self.frames)}   {frame.label}")
+        self.right_panel.set_frame(frame)
 
     def prev_frame(self) -> None:
         if self.current_index > 0:
@@ -568,9 +659,87 @@ class ViewerApp:
         )
         if not selected:
             return
-        image = self.renderer.render(frame).convert("RGB")
+        image = self.renderer.render_scene(frame).convert("RGB")
+        canvas_w = self.canvas.winfo_width()
+        canvas_h = self.canvas.winfo_height()
+        if canvas_w > 0 and canvas_h > 0:
+            crop_w = min(canvas_w, image.width)
+            crop_h = min(canvas_h, image.height)
+            image = image.crop((0, 0, crop_w, crop_h))
         image.save(selected, format="PNG")
         messagebox.showinfo("Saved", f"Saved to:\n{selected}")
+
+
+class RightPanel(ttk.Frame):
+    def __init__(self, parent: tk.Misc, *, width: int) -> None:
+        super().__init__(parent)
+        self.configure(width=width)
+        self.columnconfigure(0, weight=1)
+
+    def set_frame(self, frame: Frame) -> None:
+        for child in self.winfo_children():
+            child.destroy()
+
+        header = ttk.Frame(self)
+        header.grid(row=0, column=0, sticky="ew", padx=12, pady=(12, 10))
+        header.columnconfigure(0, weight=1)
+        ttk.Label(header, text=frame.label, font=("Segoe UI", 14, "bold")).grid(row=0, column=0, sticky="w")
+        meta = []
+        if frame.question is not None:
+            meta.append(f"Question: {frame.question}")
+        if frame.state.free_collisions:
+            meta.append(f"Free-collisions: {len(frame.state.free_collisions)}")
+        if frame.state.free_missing:
+            meta.append(f"Free-missing: {len(frame.state.free_missing)}")
+        if meta:
+            ttk.Label(header, text="   ".join(meta), foreground=MUTED).grid(row=1, column=0, sticky="w", pady=(6, 0))
+        if frame.answer:
+            ttk.Label(header, text=f"Answer: {frame.answer}", foreground=MUTED, wraplength=520).grid(row=2, column=0, sticky="w", pady=(6, 0))
+
+        two_col = ttk.Frame(self)
+        two_col.grid(row=1, column=0, sticky="ew", padx=12)
+        two_col.columnconfigure(0, weight=1, uniform="right_cols")
+        two_col.columnconfigure(1, weight=1, uniform="right_cols")
+
+        self._section(two_col, 0, 0, "Added atoms", [atom_to_text(a) for a in frame.added_atoms], ADDED_HIGHLIGHT)
+        self._section(two_col, 0, 1, "Removed from active base", frame.removed_atoms, "#dc2626")
+
+        self._section(self, 2, 0, "Used atoms", [atom_to_text(a) for a in frame.used_atoms], USED_HIGHLIGHT, padx=12)
+        self._section(self, 3, 0, "Scene summary", scene_summary(frame.state), TEXT, padx=12)
+
+    def _section(
+        self,
+        parent: tk.Misc,
+        row: int,
+        col: int,
+        title: str,
+        items: list[str],
+        color: str,
+        *,
+        padx: int = 0,
+    ) -> None:
+        box = ttk.Frame(parent)
+        box.grid(row=row, column=col, sticky="ew", padx=padx, pady=(10, 0))
+        box.columnconfigure(0, weight=1)
+        ttk.Label(box, text=title, foreground=color).grid(row=0, column=0, sticky="w")
+
+        height = min(max(len(items), 3), 18)
+        text = tk.Text(
+            box,
+            height=height,
+            wrap="word",
+            relief=tk.FLAT,
+            borderwidth=0,
+            highlightthickness=1,
+            highlightbackground=PANEL_BORDER,
+            background=PANEL_BG,
+        )
+        text.grid(row=1, column=0, sticky="ew", pady=(6, 0))
+        if items:
+            text.insert("1.0", "\n".join(items))
+        else:
+            text.insert("1.0", "-")
+        text.configure(state=tk.DISABLED)
 
 
 def default_paths() -> tuple[Path, Path]:

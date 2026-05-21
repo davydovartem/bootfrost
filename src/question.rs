@@ -43,6 +43,12 @@ impl Question{
 		self.used_answers.retain(|q| q.bid != bid);
 	}
 
+	pub fn clear_answer_cache(&mut self){
+		self.answers.clear();
+		self.curr_answer_stack.clear();
+		self.used_answers.clear();
+	}
+
 	pub fn branches(&self, tqfs: &Vec<Tqf>) -> usize{
 		tqfs[self.aformula.0].next.len()
 	}
@@ -161,6 +167,7 @@ impl Question{
 								answer: &curr_answer,
 								attributes: attributes,
 								bid: bid,
+								answer_subquestions: vec![],
 							};
 
 							let b = processing(qtid, context, Some(&curr_answer), &mut env).unwrap();

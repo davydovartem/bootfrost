@@ -30,6 +30,7 @@ pub struct SolverResult{
 #[derive(Debug, Deserialize, Serialize)]
 pub struct BranchBlock{
 	pub aid: AnswerId,
+	pub parent_answer: Option<Answer>,
 	pub atqf: TqfId,
 	pub eindex: usize,
 	pub context: Context,
@@ -45,6 +46,7 @@ pub struct Solver{
 	base: Base,
 	tqfs: Vec<Tqf>,
 	questions: Vec<Question>,
+	preferred_subquestions: Vec<(usize, BlockId)>,
 	bstack: Vec<BranchBlock>,
 	curr_bid: BlockId,
 	curr_step: usize,
@@ -222,6 +224,7 @@ impl Solver{
 
 		let first_block: BranchBlock = BranchBlock{
 			aid: AnswerId(1000000000, 1000000000),
+			parent_answer: None,
 			atqf: tid,
 			eindex: 0,
 			context: Context::new_empty(),
@@ -236,6 +239,7 @@ impl Solver{
 			base: Base::new(),
 			tqfs: tqfs,
 			questions: vec![],
+			preferred_subquestions: vec![],
 			bstack: vec![first_block],
 			curr_bid: BlockId(0),
 			curr_step:0,
@@ -276,9 +280,7 @@ impl Solver{
 		}
 	}
 
-	fn find_answer_global(&mut self) -> AnswerOption{
-		let bid = self.bstack.last().unwrap().bid;
-		let strategy = self.strategy();
+	fn try_strategy_items(&mut self, strategy: &[StrategyItem], bid: BlockId) -> AnswerOption{
 		for si in strategy.iter(){
 			let fstack_i = self.questions[si.qid.0].fstack_i;
 			println!("Try question {}", si.qid.0);
@@ -300,24 +302,54 @@ impl Solver{
 					println!("No answers have been found (selected).");
 				},			
 			}
-			// if let Some(aid) = self.questions[si.qid.0].find_answer_local(si, bid, &mut self.psterms, &self.tqfs, &mut self.base, self.bstack.len()-1, &self.bstack[fstack_i].context, &mut self.attributes){
-			// 	let answer = &self.questions[aid.0].answers[aid.1];
-			// 	println!("{}: {}",si.qid.0, AnswerDisplay{answer: &answer, psterms: &self.psterms, dm: DisplayMode::Plain});
-			// 	return Some(aid);
-			// }else{
-			// 	println!("No answers have been found.");
-			// }
 		}
-		
+
 		match self.strategy{
-			Strategy::ManualBest => AnswerOption:: Restart,
+			Strategy::ManualBest => AnswerOption::Restart,
 			_ => AnswerOption::Fail,
 		}
 	}
 
+	fn find_answer_global(&mut self) -> AnswerOption{
+		let bid = self.bstack.last().unwrap().bid;
+		let strategy = self.strategy();
+		let preferred_qids = self.preferred_subquestions
+			.iter()
+			.filter(|(_, qbid)| *qbid == bid)
+			.map(|(qix, _)| *qix)
+			.filter(|qix| *qix < self.questions.len() && self.questions[*qix].bid == bid)
+			.collect::<Vec<usize>>();
+
+		if !preferred_qids.is_empty(){
+			let preferred_strategy = preferred_qids
+				.iter()
+				.filter_map(|qix| strategy.iter().find(|si| si.qid.0 == *qix).cloned())
+				.collect::<Vec<StrategyItem>>();
+
+			let preferred_res = self.try_strategy_items(&preferred_strategy, bid);
+			match preferred_res{
+				AnswerOption::Success(aid) => {
+					self.preferred_subquestions.retain(|(qix, qbid)| !(*qbid == bid && *qix == aid.0));
+					return AnswerOption::Success(aid);
+				},
+				AnswerOption::Restart => {
+					return AnswerOption::Restart;
+				},
+				AnswerOption::Fail => {
+					self.preferred_subquestions.retain(|(_, qbid)| *qbid != bid);
+				},
+				AnswerOption::Next => {
+					panic!("");
+				}
+			}
+		}
+
+		self.try_strategy_items(&strategy, bid)
+	}
+
 
 	fn transform(&mut self, aid:AnswerId){
-		let answer = &self.questions[aid.0].answers[aid.1];
+		let answer = self.questions[aid.0].answers[aid.1].clone();
 		let curr_context = &self.bstack[self.questions[aid.0].fstack_i].context;	
 		let origin_bid = self.bstack[self.questions[aid.0].fstack_i].bid;	
 		let a_tqf = &self.questions[aid.0].aformula;
@@ -333,6 +365,7 @@ impl Solver{
 		let commands = &self.tqfs[a_tqf.0].commands;
 
 		self.curr_bid = BlockId(self.curr_bid.0 + 1);
+		let q_start = self.questions.len();
 
 		let mut env = PEnv{
 			psterms: &mut self.psterms,
@@ -340,13 +373,21 @@ impl Solver{
 			answer: &answer,
 			attributes: &mut self.attributes,
 			bid: self.curr_bid,
+			answer_subquestions: vec![],
 		};
 		commands.iter().for_each(|c| {processing(*c, &curr_context, Some(&answer), &mut env);});
+		let requested_subquestions = mem::take(&mut env.answer_subquestions);
+
+		if !requested_subquestions.is_empty(){
+			self.questions.iter_mut().for_each(|q| q.clear_answer_cache());
+			self.preferred_subquestions.clear();
+		}
 
 		
 
 		let mut new_block: BranchBlock = BranchBlock{
 			aid: aid,
+			parent_answer: Some(answer.clone()),
 			atqf: atqf,
 			eindex: 0,
 			context: Context::new(&curr_context, &answer),
@@ -356,7 +397,24 @@ impl Solver{
 		};
 
 		self.bstack.push(new_block);
-		self.enable_block();
+		if self.enable_block(){
+			let preferred_subquestions = requested_subquestions
+				.into_iter()
+				.filter_map(|offset| {
+					let qix = q_start + offset;
+					if qix < self.questions.len() && self.questions[qix].bid == self.curr_bid{
+						Some((qix, self.curr_bid))
+					}else{
+						println!("Warning: answer_subquestion({}) points outside the newly added subquestions.", offset);
+						None
+					}
+				})
+				.collect::<Vec<(usize, BlockId)>>();
+
+			if !preferred_subquestions.is_empty(){
+				self.preferred_subquestions = preferred_subquestions;
+			}
+		}
 	}
 
 	fn disable_block(&mut self){
@@ -365,6 +423,7 @@ impl Solver{
 				self.base.remove(top.bid);
 
 				self.questions.retain(|q| q.bid != top.bid);
+				self.preferred_subquestions.retain(|(_, bid)| *bid != top.bid);
 
 				self.questions.iter_mut().for_each(|q| q.remove_answers(top.bid));
 
@@ -415,9 +474,10 @@ impl Solver{
 				let mut env = PEnv{
 					psterms: &mut self.psterms,
 					base: &mut self.base,
-					answer: &self.questions[top.aid.0].answers[top.aid.1],
+					answer: top.parent_answer.as_ref().unwrap(),
 					attributes: &mut self.attributes,
 					bid: top.bid,
+					answer_subquestions: vec![],
 				};				
 
 				econj
@@ -449,9 +509,10 @@ impl Solver{
 				let mut env = PEnv{
 					psterms: &mut self.psterms,
 					base: &mut self.base,
-					answer: &self.questions[top.aid.0].answers[top.aid.1],
+					answer: top.parent_answer.as_ref().unwrap(),
 					attributes: &mut self.attributes,
 					bid: top.bid,
+					answer_subquestions: vec![],
 				};				
 				print_batoms(&vec![], &mut env);
 				
@@ -711,6 +772,7 @@ pub fn matching(
 					answer: &curr_answer,
 					attributes: attributes,
 					bid: bid,
+					answer_subquestions: vec![],
 				};	
 							
 				let new_qtid = processing(qtid, context, Some(&curr_answer), &mut env).unwrap();
