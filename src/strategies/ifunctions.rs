@@ -437,6 +437,15 @@ fn answer_subquestion(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 	env.psterms.get_tid(Term::Bool(true)).unwrap()
 }
 
+fn answer_once(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
+	if !args.is_empty(){
+		panic!("answer_once expects no arguments");
+	}
+
+	env.answer_once = true;
+	env.psterms.get_tid(Term::Bool(true)).unwrap()
+}
+
 pub fn print_batoms(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 	if args.len() != 0{
 		panic!("");
@@ -654,6 +663,7 @@ pub fn init() -> (PSTerms, HashMap<String, SymbolId>){
 		("base_to_string".to_string(), (base_to_string as IFunction, Position::Classic)),
 		("remove_fact".to_string(), (remove_fact as IFunction, Position::Classic)),
 		("answer_subquestion".to_string(), (answer_subquestion as IFunction, Position::Classic)),
+		("answer_once".to_string(), (answer_once as IFunction, Position::Classic)),
 		("read_file_to_string".to_string(), (read_file_to_string as IFunction, Position::Classic)),
 		("solve".to_string(), (solve as IFunction, Position::Classic)),
 		("string".to_string(), (string as IFunction, Position::Classic)),

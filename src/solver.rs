@@ -197,6 +197,9 @@ impl Solver{
 
 		println!("\n\nQuestions:");
 		for (i,q) in self.questions.iter().enumerate(){
+			if q.disabled{
+				continue;
+			}
 			print!("({}) ", i);
 			self.print_tqf(q.aformula, "".to_string(), &self.bstack[q.fstack_i].context);
 		}
@@ -282,6 +285,9 @@ impl Solver{
 
 	fn try_strategy_items(&mut self, strategy: &[StrategyItem], bid: BlockId) -> AnswerOption{
 		for si in strategy.iter(){
+			if self.questions[si.qid.0].disabled{
+				continue;
+			}
 			let fstack_i = self.questions[si.qid.0].fstack_i;
 			println!("Try question {}", si.qid.0);
 			let res = self.questions[si.qid.0].find_answer_local(si, bid, &mut self.psterms, &self.tqfs, &mut self.base, self.bstack.len()-1, &self.bstack[fstack_i].context, &mut self.attributes);
@@ -317,7 +323,7 @@ impl Solver{
 			.iter()
 			.filter(|(_, qbid)| *qbid == bid)
 			.map(|(qix, _)| *qix)
-			.filter(|qix| *qix < self.questions.len() && self.questions[*qix].bid == bid)
+			.filter(|qix| *qix < self.questions.len() && self.questions[*qix].bid == bid && !self.questions[*qix].disabled)
 			.collect::<Vec<usize>>();
 
 		if !preferred_qids.is_empty(){
@@ -374,13 +380,20 @@ impl Solver{
 			attributes: &mut self.attributes,
 			bid: self.curr_bid,
 			answer_subquestions: vec![],
+			answer_once: false,
 		};
 		commands.iter().for_each(|c| {processing(*c, &curr_context, Some(&answer), &mut env);});
 		let requested_subquestions = mem::take(&mut env.answer_subquestions);
+		let requested_answer_once = env.answer_once;
 
 		if !requested_subquestions.is_empty(){
 			self.questions.iter_mut().for_each(|q| q.clear_answer_cache());
 			self.preferred_subquestions.clear();
+		}
+
+		if requested_answer_once{
+			self.questions[aid.0].disable();
+			self.preferred_subquestions.retain(|(qix, _)| *qix != aid.0);
 		}
 
 		
@@ -478,6 +491,7 @@ impl Solver{
 					attributes: &mut self.attributes,
 					bid: top.bid,
 					answer_subquestions: vec![],
+					answer_once: false,
 				};				
 
 				econj
@@ -513,6 +527,7 @@ impl Solver{
 					attributes: &mut self.attributes,
 					bid: top.bid,
 					answer_subquestions: vec![],
+					answer_once: false,
 				};				
 				print_batoms(&vec![], &mut env);
 				
@@ -551,6 +566,7 @@ impl Solver{
 							curr_answer_stack: vec![],
 							answers: vec![],
 							used_answers: vec![],
+							disabled: false,
 						}).collect();
 			if new_questions.len() > 0{
 				println!("\nNew questions: YES. ({})-({})", self.questions.len(), self.questions.len() + new_questions.len() - 1)
@@ -773,6 +789,7 @@ pub fn matching(
 					attributes: attributes,
 					bid: bid,
 					answer_subquestions: vec![],
+					answer_once: false,
 				};	
 							
 				let new_qtid = processing(qtid, context, Some(&curr_answer), &mut env).unwrap();

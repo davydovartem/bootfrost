@@ -14,4 +14,5 @@ pub struct PEnv<'a>{
 	pub attributes: &'a mut Attributes,
 	pub bid: BlockId,
 	pub answer_subquestions: Vec<usize>,
+	pub answer_once: bool,
 }

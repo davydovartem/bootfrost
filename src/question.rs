@@ -33,6 +33,7 @@ pub struct Question{
 	pub curr_answer_stack: Vec<Answer>,
 	pub answers: Vec<Answer>,
 	pub used_answers: Vec<Answer>,
+	pub disabled: bool,
 }
 
 impl Question{
@@ -47,6 +48,11 @@ impl Question{
 		self.answers.clear();
 		self.curr_answer_stack.clear();
 		self.used_answers.clear();
+	}
+
+	pub fn disable(&mut self){
+		self.disabled = true;
+		self.clear_answer_cache();
 	}
 
 	pub fn branches(&self, tqfs: &Vec<Tqf>) -> usize{
@@ -168,6 +174,7 @@ impl Question{
 								attributes: attributes,
 								bid: bid,
 								answer_subquestions: vec![],
+								answer_once: false,
 							};
 
 							let b = processing(qtid, context, Some(&curr_answer), &mut env).unwrap();

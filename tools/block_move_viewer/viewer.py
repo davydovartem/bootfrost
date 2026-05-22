@@ -50,6 +50,7 @@ LINE_HEIGHT = 22
 
 ROBOT_IDS = {"R1", "R2", "R3"}
 BLOCK_IDS = {"B1", "B2"}
+HIDDEN_DERIVED_ATOM_NAMES = {"Free", "Pos", "R"}
 
 
 def term_to_text(term: dict[str, Any]) -> str:
@@ -125,6 +126,19 @@ def active_atoms_from_base(base_entries: list[dict[str, Any]]) -> list[dict[str,
     return [entry["atom"] for entry in base_entries if not entry.get("deleted", False)]
 
 
+def visible_derived_base_atoms(active_atoms: list[dict[str, Any]], initial_keys: set[str]) -> list[str]:
+    derived_atoms: list[str] = []
+    for atom in active_atoms:
+        atom_name = str(atom.get("name", ""))
+        atom_text = atom_to_text(atom)
+        if atom_name in HIDDEN_DERIVED_ATOM_NAMES:
+            continue
+        if atom_text in initial_keys:
+            continue
+        derived_atoms.append(atom_text)
+    return derived_atoms
+
+
 def infer_entities(atoms: list[dict[str, Any]]) -> set[str]:
     entities: set[str] = set()
     for atom in atoms:
@@ -178,6 +192,7 @@ class Frame:
     used_atoms: list[dict[str, Any]]
     removed_atoms: list[str]
     active_atoms: list[dict[str, Any]]
+    derived_base_atoms: list[str]
     state: SceneState
     added_entities: set[str]
     used_entities: set[str]
@@ -262,6 +277,7 @@ def load_frames(log_path: Path) -> tuple[list[Frame], set[tuple[int, int]]]:
             used_atoms=[],
             removed_atoms=[],
             active_atoms=initial_atoms,
+            derived_base_atoms=[],
             state=initial_state,
             added_entities=set(),
             used_entities=set(),
@@ -304,6 +320,7 @@ def load_frames(log_path: Path) -> tuple[list[Frame], set[tuple[int, int]]]:
                 used_atoms=used_atoms,
                 removed_atoms=removed_atoms,
                 active_atoms=active_atoms,
+                derived_base_atoms=visible_derived_base_atoms(active_atoms, initial_keys),
                 state=state,
                 added_entities=infer_entities(added_atoms),
                 used_entities=infer_entities(used_atoms),
@@ -705,7 +722,8 @@ class RightPanel(ttk.Frame):
         self._section(two_col, 0, 1, "Removed from active base", frame.removed_atoms, "#dc2626")
 
         self._section(self, 2, 0, "Used atoms", [atom_to_text(a) for a in frame.used_atoms], USED_HIGHLIGHT, padx=12)
-        self._section(self, 3, 0, "Scene summary", scene_summary(frame.state), TEXT, padx=12)
+        self._section(self, 3, 0, "Derived base atoms", frame.derived_base_atoms, ADDED_HIGHLIGHT, padx=12)
+        self._section(self, 4, 0, "Scene summary", scene_summary(frame.state), TEXT, padx=12)
 
     def _section(
         self,
