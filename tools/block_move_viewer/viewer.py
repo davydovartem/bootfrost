@@ -584,6 +584,7 @@ class ViewerApp:
         self.export_dir = export_dir
         self.current_index = 0
         self.photo: ImageTk.PhotoImage | None = None
+        self.scroll_step_var = tk.StringVar(value="1")
 
         self.root.title("Block Move Planning Viewer")
         self.root.geometry("1200x760")
@@ -595,8 +596,20 @@ class ViewerApp:
         controls = ttk.Frame(outer)
         controls.pack(fill=tk.X)
 
-        ttk.Button(controls, text="<< Prev", command=self.prev_frame).pack(side=tk.LEFT)
+        ttk.Button(controls, text="|<", command=self.first_frame).pack(side=tk.LEFT)
+        ttk.Button(controls, text="<< Prev", command=self.prev_frame).pack(side=tk.LEFT, padx=(8, 0))
         ttk.Button(controls, text="Next >>", command=self.next_frame).pack(side=tk.LEFT, padx=(8, 0))
+        ttk.Button(controls, text=">|", command=self.last_frame).pack(side=tk.LEFT, padx=(8, 0))
+
+        ttk.Label(controls, text="Step:").pack(side=tk.LEFT, padx=(16, 0))
+        ttk.Spinbox(
+            controls,
+            from_=1,
+            to=9999,
+            textvariable=self.scroll_step_var,
+            width=6,
+            justify="center",
+        ).pack(side=tk.LEFT, padx=(6, 0))
         ttk.Button(controls, text="Save PNG", command=self.save_current_frame).pack(side=tk.LEFT, padx=(16, 0))
         ttk.Button(controls, text="Open JSON", command=self.choose_and_reload).pack(side=tk.LEFT, padx=(8, 0))
 
@@ -621,6 +634,12 @@ class ViewerApp:
         self.root.bind("<Control-s>", lambda _event: self.save_current_frame())
 
         self.refresh()
+
+    def scroll_step(self) -> int:
+        value = self.scroll_step_var.get().strip()
+        if not is_int_text(value):
+            return 1
+        return max(1, int(value))
 
     def choose_and_reload(self) -> None:
         selected = filedialog.askopenfilename(
@@ -653,14 +672,27 @@ class ViewerApp:
         self.status_var.set(f"{self.current_index + 1}/{len(self.frames)}   {frame.label}")
         self.right_panel.set_frame(frame)
 
+    def first_frame(self) -> None:
+        if self.current_index != 0:
+            self.current_index = 0
+            self.refresh()
+
+    def last_frame(self) -> None:
+        last_index = max(0, len(self.frames) - 1)
+        if self.current_index != last_index:
+            self.current_index = last_index
+            self.refresh()
+
     def prev_frame(self) -> None:
+        step = self.scroll_step()
         if self.current_index > 0:
-            self.current_index -= 1
+            self.current_index = max(0, self.current_index - step)
             self.refresh()
 
     def next_frame(self) -> None:
+        step = self.scroll_step()
         if self.current_index + 1 < len(self.frames):
-            self.current_index += 1
+            self.current_index = min(len(self.frames) - 1, self.current_index + step)
             self.refresh()
 
     def save_current_frame(self) -> None:
