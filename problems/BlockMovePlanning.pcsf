@@ -1,4 +1,7 @@
-? H(10), W(8), R(1, N), R(2, E), R(3, S), B(B1), B(B2), Ready(1, 0), Ready(2, 0), Ready(3, 0), SubTaskComplete(B1, 0), SubTaskComplete(B2, 0), ~
+? H(10), W(8), R(1, N), R(2, E), R(3, S), B(B1), B(B2), ~
+	IsBlockOnPosition(B1, 0), IsBlockOnPosition(B2, 0), ~
+	IsRobotInPair(1, 0), IsRobotInPair(2, 0), IsRobotInPair(3, 0), ~
+	IsRobotSingle(1, 0), IsRobotSingle(2, 0), IsRobotSingle(3, 0), ~
 	Pos(1, 1, 8), Pos(2, 7, 7), Pos(3, 7, 2), Pos(B1, 6, 5), Pos(B2, 2, 3), ~
 	Free(0,11,0),	Free(1,11,0), 	Free(2,11,0), 	Free(3,11,0), 	Free(4,11,0), 	Free(5,11,0), 	Free(6,11,0), 	Free(7,11,0), 	Free(8,11,0),	Free(9,11,0), ~
 	Free(0,10,0),	Free(1,10,1), 	Free(2,10,1), 	Free(3,10,1), 	Free(4,10,1), 	Free(5,10,1), 	Free(6,10,1), 	Free(7,10,1), 	Free(8,10,1),	Free(9,10,0), ~
@@ -13,38 +16,45 @@
 	Free(0,1,0),	Free(1,1,1), 	Free(2,1,1), 	Free(3,1,1), 	Free(4,1,1), 	Free(5,1,1), 	Free(6,1,1), 	Free(7,1,1), 	Free(8,1,1),	Free(9,1,0), ~
 	Free(0,0,0),	Free(1,0,0), 	Free(2,0,0), 	Free(3,0,0), 	Free(4,0,0), 	Free(5,0,0), 	Free(6,0,0), 	Free(7,0,0), 	Free(8,0,0), 	Free(9,0,0) 
 	#--------1.1
-	!r1, r2, r3, d1, d2, d3, x1, y1, x2, y2, f R(1, d1), R(2, d2), R(3, d3), Pos(B1, x1, y1), Pos(B2, x2, y2), ~
-		Ready(r1, 0), Ready(r2, 0), r1 != r2 $ answer_once()
-		? AppM(1, x1, y1 - 1), AppM(2, x1 + 1, y1 - 1), Pair(1, 2)
-		? AppM(2, x1, y1 - 1), AppM(3, x1 + 1, y1 - 1), Pair(2, 3)
-		? AppM(3, x1, y1 - 1), AppM(1, x1 + 1, y1 - 1), Pair(3, 1)
-		? AppM(1, x2, y2 - 1), AppM(2, x2 + 1, y2 - 1), Pair(1, 2)
-		? AppM(2, x2, y2 - 1), AppM(3, x2 + 1, y2 - 1), Pair(2, 3)
-		? AppM(3, x2, y2 - 1), AppM(1, x2 + 1, y2 - 1), Pair(3, 1)
+	#Назначение пары ближайших роботов к блоку
+	#1
+	!r1, r2, b1, b2, r3, d1, d2, d3, x1, y1, x2, y2, f R(1, d1), R(2, d2), R(3, d3), Pos(B1, x1, y1), Pos(B2, x2, y2), ~
+			IsRobotInPair(r1, 0), IsRobotInPair(r2, 0), r1!=r2, ~
+			IsBlockOnPosition(b1, 0), IsBlockOnPosition(b2, 0), b1 != b2 $ remove_fact(5), remove_fact(6), answer_once()
+		? AppM(1, x1, y1 - 1), AppM(2, x1 + 1, y1 - 1), IsRobotInPair(1, 1), IsRobotInPair(2, 1)
+		? AppM(2, x1, y1 - 1), AppM(3, x1 + 1, y1 - 1), IsRobotInPair(2, 1), IsRobotInPair(3, 1)
+		? AppM(3, x1, y1 - 1), AppM(1, x1 + 1, y1 - 1), IsRobotInPair(3, 1), IsRobotInPair(1, 1)
+		? AppM(1, x2, y2 - 1), AppM(2, x2 + 1, y2 - 1), IsRobotInPair(1, 1), IsRobotInPair(2, 1)
+		? AppM(2, x2, y2 - 1), AppM(3, x2 + 1, y2 - 1), IsRobotInPair(2, 1), IsRobotInPair(3, 1)
+		? AppM(3, x2, y2 - 1), AppM(1, x2 + 1, y2 - 1), IsRobotInPair(3, 1), IsRobotInPair(1, 1)
 	#--------1.2
-	!r1, r2, r3, d1, d2, d3, x, y, f, b R(1, d1), R(2, d2), R(3, d3), B(b), Pos(b, x, y), ~
-		Ready(r1, 3), Ready(r2, 3), r1 != r2 $ answer_once()
-		? AppM(1, x, y - 1), AppM(2, x + 1, y - 1), Pair(1, 2)
-		? AppM(2, x, y - 1), AppM(3, x + 1, y - 1), Pair(2, 3)
-		? AppM(3, x, y - 1), AppM(1, x + 1, y - 1), Pair(3, 1)
+	#2
+	!r1, r2, b, r3, d1, d2, d3, x, y, f, b, b2 R(r1, d1), R(r2, d2), B(b), Pos(b, x, y), ~
+			IsRobotInPair(r1, 0), IsRobotInPair(r2, 0), r1!=r2, ~
+			IsBlockOnPosition(b2, 1), b != b2 $ remove_fact(5), remove_fact(6), answer_once()
+		? AppM(r1, x, y - 1), AppM(r2, x + 1, y - 1), IsRobotInPair(r1, 1), IsRobotInPair(r2, 1)
 	#--------2
 	# Если расстояние между одной из соседних клеток до цели меньше чем 
 	# расстояния от других соседних клеток, то поворачиваем в эту сторону
+	#3
 	!r, x, y, u, v, d R(r, d), Pos(r, x, y), AppM(r, u, v), ~
 				dist(x, y + 1, u, v) <f dist(x - 1, y, u, v), ~
 				dist(x, y + 1, u, v) <f dist(x + 1, y, u, v), ~
 				dist(x, y + 1, u, v) <f dist(x, y - 1, u, v) $ remove_fact(0)
 		? R(r, N)
+	#4
 	!r, x, y, u, v, d R(r, d), Pos(r, x, y), AppM(r, u, v), ~
 				dist(x, y - 1, u, v) <f dist(x - 1, y, u, v), ~
 				dist(x, y - 1, u, v) <f dist(x + 1, y, u, v), ~
 				dist(x, y - 1, u, v) <f dist(x, y + 1, u, v) $ remove_fact(0)
 		? R(r, S)
+	#5
 	!r, x, y, u, v, d R(r, d), Pos(r, x, y), AppM(r, u, v), ~
 				dist(x - 1, y, u, v) <f dist(x + 1, y, u, v), ~
 				dist(x - 1, y, u, v) <f dist(x, y - 1, u, v), ~
 				dist(x - 1, y, u, v) <f dist(x, y + 1, u, v) $ remove_fact(0)
 		? R(r, W)
+	#6
 	!r, x, y, u, v, d R(r, d), Pos(r, x, y), AppM(r, u, v), ~
 				dist(x + 1, y, u, v) <f dist(x - 1, y, u, v), ~
 				dist(x + 1, y, u, v) <f dist(x, y + 1, u, v), ~
@@ -54,15 +64,19 @@
 	#Эта часть правил соответствует движению роботов в ориентированном направлении. 
 	#Проверка расстояния между текущим положением робота и назначенной целью является
 	#эвристикой для сокращения пространства поиска
+	#7
 	!r,x,y,u,v  R(r, N), Pos(r, x, y), Free(x, y, 0), Free(x, y + 1, 1), AppM(r,u,v), ~
 				dist(x, y, u, v) >f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3)
 		? Pos(r, x, y + 1), Free(x, y, 1), Free(x, y + 1, 0)
+	#8
 	!r,x,y,u,v  R(r, E), Pos(r, x, y), Free(x, y, 0), Free(x + 1, y, 1), AppM(r,u,v), ~
 				dist(x, y, u, v) >f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3)
 		? Pos(r, x + 1, y), Free(x, y, 1), Free(x + 1, y, 0)
+	#9
 	!r,x,y,u,v  R(r, S), Pos(r, x, y), Free(x, y, 0), Free(x, y - 1, 1), AppM(r,u,v), ~
 				dist(x, y, u, v) >f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3)
 		? Pos(r, x, y - 1), Free(x, y, 1), Free(x, y - 1, 0)
+	#10
 	!r,x,y,u,v  R(r, W), Pos(r, x, y), Free(x, y, 0), Free(x - 1, y, 1), AppM(r,u,v), ~
 				dist(x, y, u, v) >f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3)
 		? Pos(r, x - 1, y), Free(x, y, 1), Free(x - 1, y, 0)
@@ -73,15 +87,18 @@
 	# Если клетка слева или справа, являющаяся занятой и ближе к цели чем другая, то отскакиваем назад и
 	# поворачиваем и перемещаемся к той клетке, которая ближе к цели.
 	# North
+	#11
 	! r, x, y, u, v R(r, N), Pos(r, x, y), AppM(r, u, v), Free(x, y + 1, 0), or(x != u, y != v), ~
-					Free(x - 1, y, 1), Free(x + 1, y, 1), Free(x, y, 0), ~
-					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(7)
+					Free(x - 1, y, 1), Free(x, y, 0), ~
+					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
 		? R(r, W), Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1)
+	#12
 	! r, x, y, u, v R(r, N), Pos(r, x, y), AppM(r, u, v), Free(x, y + 1, 0), or(x != u, y != v), ~
-					Free(x - 1, y, 1), Free(x + 1, y, 1), Free(x, y, 0), ~
-					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(6), remove_fact(7)
+					Free(x + 1, y, 1), Free(x, y, 0), ~
+					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
 		? R(r, E), Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1)
 	# Если "хорошее лево" занято, то отскакиваем назад
+	#13
 	! r, x, y, u, v R(r, N), Pos(r, x, y), AppM(r, u, v), Free(x, y + 1, 0), Free(x, y, 0), Free(x, y - 1, 1), or(x != u, y != v), ~
 					Free(x - 1, y, 0), dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
 		? Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1), Avoid(r)
@@ -92,6 +109,7 @@
 					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
 				? R(r, E), Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1)
 	# "хорошее право" занято, отскакиваем назад
+	#14
 	! r, x, y, u, v R(r, N), Pos(r, x, y), AppM(r, u, v), Free(x, y + 1, 0), Free(x, y, 0), Free(x, y - 1, 1), or(x != u, y != v), ~
 					Free(x + 1, y, 0), dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
 		? Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1), Avoid(r)
@@ -102,15 +120,18 @@
 					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
 				? R(r, E), Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1)
 	# East
+	#15
 	! r, x, y, u, v R(r, E), Pos(r, x, y), AppM(r, u, v), Free(x + 1, y, 0), or(x != u, y != v), ~
-					Free(x, y + 1, 1), Free(x, y - 1, 1), Free(x, y, 0), ~
-					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(7)
+					Free(x, y + 1, 1), Free(x, y, 0), ~
+					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
 		? R(r, N), Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1)
+	#16
 	! r, x, y, u, v R(r, E), Pos(r, x, y), AppM(r, u, v), Free(x + 1, y, 0), or(x != u, y != v), ~
-					Free(x, y + 1, 1), Free(x, y - 1, 1), Free(x, y, 0), ~
-					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(6), remove_fact(7)
+					Free(x, y - 1, 1), Free(x, y, 0), ~
+					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
 		? R(r, S), Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1)
 	# Если "хорошее лево" занято, то отскакиваем назад
+	#17
 	! r, x, y, u, v R(r, E), Pos(r, x, y), AppM(r, u, v), Free(x + 1, y, 0), Free(x, y, 0), Free(x - 1, y, 1), or(x != u, y != v), ~
 					Free(x, y + 1, 0), dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
 		? Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1), Avoid(r)
@@ -121,6 +142,7 @@
 					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
 				? R(r, S), Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1)
 	# "хорошее право" занято, отскакиваем назад
+	#18
 	! r, x, y, u, v R(r, E), Pos(r, x, y), AppM(r, u, v), Free(x + 1, y, 0), Free(x, y, 0), Free(x - 1, y, 1), or(x != u, y != v), ~
 					Free(x, y - 1, 0), dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
 		? Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1), Avoid(r)
@@ -131,15 +153,18 @@
 					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
 				? R(r, S), Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1)
 	# South
+	#19
 	! r, x, y, u, v R(r, S), Pos(r, x, y), AppM(r, u, v), Free(x, y - 1, 0), or(x != u, y != v), ~
-					Free(x + 1, y, 1), Free(x - 1, y, 1), Free(x, y, 0), ~
-					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(7)
+					Free(x + 1, y, 1), Free(x, y, 0), ~
+					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
 		? R(r, E), Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1)
+	#20
 	! r, x, y, u, v R(r, S), Pos(r, x, y), AppM(r, u, v), Free(x, y - 1, 0), or(x != u, y != v), ~
-					Free(x + 1, y, 1), Free(x - 1, y, 1), Free(x, y, 0), ~
-					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(6), remove_fact(7)
+					Free(x - 1, y, 1), Free(x, y, 0), ~
+					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
 		? R(r, W), Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1)
 	# Если "хорошее лево" занято, то отскакиваем назад
+	#21
 	! r, x, y, u, v R(r, S), Pos(r, x, y), AppM(r, u, v), Free(x, y - 1, 0), Free(x, y, 0), Free(x, y + 1, 1), or(x != u, y != v), ~
 					Free(x + 1, y, 0), dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
 		? Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1), Avoid(r)
@@ -150,6 +175,7 @@
 					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
 				? R(r, W), Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1)
 	# "хорошее право" занято, отскакиваем назад
+	#22
 	! r, x, y, u, v R(r, S), Pos(r, x, y), AppM(r, u, v), Free(x, y - 1, 0), Free(x, y, 0), Free(x, y + 1, 1), or(x != u, y != v), ~
 					Free(x - 1, y, 0), dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
 		? Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1), Avoid(r)
@@ -160,15 +186,18 @@
 					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
 				? R(r, W), Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1)
 	# West
+	#23
 	! r, x, y, u, v R(r, W), Pos(r, x, y), AppM(r, u, v), Free(x - 1, y, 0), or(x != u, y != v), ~
-					Free(x, y - 1, 1), Free(x, y + 1, 1), Free(x, y, 0), ~
-					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(7)
+					Free(x, y - 1, 1), Free(x, y, 0), ~
+					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
 		? R(r, S), Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1)
+	#24
 	! r, x, y, u, v R(r, W), Pos(r, x, y), AppM(r, u, v), Free(x - 1, y, 0), or(x != u, y != v), ~
-					Free(x, y - 1, 1), Free(x, y + 1, 1), Free(x, y, 0), ~
-					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(6), remove_fact(7)
+					Free(x, y + 1, 1), Free(x, y, 0), ~
+					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
 		? R(r, N), Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1)
 	# Если "хорошее лево" занято, то отскакиваем назад
+	#25
 	! r, x, y, u, v R(r, W), Pos(r, x, y), AppM(r, u, v), Free(x - 1, y, 0), Free(x, y, 0), Free(x + 1, y, 1), or(x != u, y != v), ~
 					Free(x, y - 1, 0), dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
 		? Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1), Avoid(r)
@@ -179,6 +208,7 @@
 					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
 				? R(r, N), Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1)
 	# "хорошее право" занято, отскакиваем назад
+	#26
 	! r, x, y, u, v R(r, W), Pos(r, x, y), AppM(r, u, v), Free(x - 1, y, 0), Free(x, y, 0), Free(x + 1, y, 1), or(x != u, y != v), ~
 					Free(x, y + 1, 0), dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
 		? Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1), Avoid(r)
@@ -190,11 +220,13 @@
 				? R(r, N), Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1)
 
 	#--------4
-	#Проверка выполнения текущего задания. Если робот находится рядом с блоком и готов к его перемещению, то ему необходимо повернуть на север.
-	!r, x, y, d, f  R(r, d), AppM(r, x, y), Pos(r, x, y), Ready(r, f), or(f == 0, f == 3) $ remove_fact(0), remove_fact(1), remove_fact(3)
+	#Проверка выполнения задания по подходу к блоку для передвижения его в паре. Если робот находится рядом с блоком и готов к его перемещению, то ему необходимо повернуть на север.
+	#27
+	!r, x, y, d, f  R(r, d), AppM(r, x, y), Pos(r, x, y), IsRobotInPair(r, 1) $ remove_fact(0), remove_fact(1)
 		? R(r, N), Ready(r, 1)
 	#--------5
 	#Если два разных робота готовы толкать блок, они одновременно переходят в режим движения.
+	#28
 	!b,x,y,r1,r2,x1,y1,x2,y2 Ready(r1, 1), Ready(r2, 1), Pos(r1, x1, y1), Pos(r2, x2, y2), Pos(b, x, y), ~
 				Free(x1, y1 + 2, 1), Free(x2, y2 + 2, 1), Free(x1, y1, 0), Free(x2, y2, 0), B(b), ~
 				y1 == y2, or(x1 == x, x2 == x), or(x1 == x + 1, x2 == x + 1), r1 != r2 $ remove_fact(2), remove_fact(3), remove_fact(4), remove_fact(5), remove_fact(6), remove_fact(7), remove_fact(8)
@@ -204,49 +236,76 @@
 			Free(x1, y1, 1), Free(x2, y2, 1)
 	#--------6
 	#Проверка достижения края сцены роботами, перемещающими блок
-	#Добавляем инфу о том, что последний ряд клеток занят
+	#29
 	!r1,r2,b,x1,x2,y,h Move(r1, b), Ready(r1, 1), Pos(r1, x1, y), Move(r2, b), Ready(r2, 1), Pos(r2, x2, y), ~
-					r1 != r2, or(x1 == x2 + 1, x2 == x1 + 1), H(h), y == h - 1 $ remove_fact(0), remove_fact(1), remove_fact(3), remove_fact(4), answer_once()
-		? BlockMovedToEdge(b)
+					IsRobotInPair(r1, 1), IsRobotInPair(r2, 1), ~
+					r1 != r2, or(x1 == x2 + 1, x2 == x1 + 1), H(h), y == h - 1 $ remove_fact(0), remove_fact(1), remove_fact(3), remove_fact(4), remove_fact(6), remove_fact(7)
+		? BlockMovedToEdge(b), IsRobotInPair(r1, 0), IsRobotInPair(r2, 0)
 	#аналогичное правило, если один из блоков уже был перемещен
-	!r1,r2,b,x1,x2,y,h Move(r1, b), Ready(r1, 1), Pos(r1, x1, y), Move(r2, b), Ready(r2, 1), Pos(r2, x2, y), r1 != r2, or(x1 == x2 + 1, x2 == x1 + 1), ~
-				H(h), BlockMovedToEdge(B1), y == h - 2 $ remove_fact(0), remove_fact(1), remove_fact(3), remove_fact(4), answer_once()
-		? BlockMovedToEdge(b)
+	#30
+	!r1,r2,b,x1,x2,y,h Move(r1, b), Ready(r1, 1), Pos(r1, x1, y), Move(r2, b), Ready(r2, 1), Pos(r2, x2, y), ~
+				IsRobotInPair(r1, 1), IsRobotInPair(r2, 1), ~
+				r1 != r2, or(x1 == x2 + 1, x2 == x1 + 1), ~
+				H(h), BlockMovedToEdge(B1), y == h - 2 $ remove_fact(0), remove_fact(1), remove_fact(3), remove_fact(4), remove_fact(6), remove_fact(7)
+		? BlockMovedToEdge(b), IsRobotInPair(r1, 0), IsRobotInPair(r2, 0)
 	#--------7
-	#Правило для назначения одного из роботов двигаться к краю (торцу) блока для дальнейшего продвижения к цели по оси X. Если текущее положение
+	#Правила для назначения одного из роботов двигаться к краю (торцу) блока для дальнейшего продвижения к цели по оси X. Если текущее положение
 	#блока находится в левой части сцены, то назначается целевое положение робота слева от блока, иначе - наоборот.
-	!b,n,x,y,w BlockMovedToEdge(b), Pos(b, x, y), W(w), x <f w / 2 $ answer_once()
-		? AppM(1, x - 1, y)
-		? AppM(2, x - 1, y)
-		? AppM(3, x - 1, y)
-	!b,n,x,y,w BlockMovedToEdge(b), Pos(b, x, y), W(w), x >f w / 2 $ answer_once()
-		? AppM(1, x + 2, y)
-		? AppM(2, x + 2, y)
-		? AppM(3, x + 2, y)
+	#31
+	!r1,r2,xr1,xr2,yr1,yr2,b,n,x,y,w BlockMovedToEdge(b), IsBlockOnPosition(b, 0), Pos(b, x, y), W(w), x <f w / 2, ~
+				IsRobotSingle(r1, 0), Pos(r1, xr1, yr1), IsRobotSingle(r2, 0), Pos(r2, xr2, yr2), r1 != r2, yr1 == y - 1, yr2 == y - 1, ~
+				dist(xr1, yr1, x - 1, y) <=f dist(xr2, yr2, x - 1, y) $ remove_fact(5), remove_fact(7)
+		? AppM(r1, x - 1, y), IsRobotSingle(r1, 1)
+	#32
+	!r1,r2,xr1,xr2,yr1,yr2,b,n,x,y,w BlockMovedToEdge(b), IsBlockOnPosition(b, 0), Pos(b, x, y), W(w), x <f w / 2, ~
+				IsRobotSingle(r1, 0), Pos(r1, xr1, yr1), IsRobotSingle(r2, 0), Pos(r2, xr2, yr2), r1 != r2, yr1 == y - 1, yr2 == y - 1, ~
+				dist(xr1, yr1, x - 1, y) >f dist(xr2, yr2, x - 1, y) $ remove_fact(5), remove_fact(7)
+		? AppM(r2, x - 1, y), IsRobotSingle(r2, 1)
+	#33
+	!r1,r2,xr1,xr2,yr1,yr2,b,n,x,y,w BlockMovedToEdge(b), IsBlockOnPosition(b, 0), Pos(b, x, y), W(w), x >f w / 2, ~
+				IsRobotSingle(r1, 0), Pos(r1, xr1, yr1), IsRobotSingle(r2, 0), Pos(r2, xr2, yr2), r1 != r2, yr1 == y - 1, yr2 == y - 1, ~
+				dist(xr1, yr1, x + 2, y) <=f dist(xr2, yr2, x + 2, y) $ remove_fact(5), remove_fact(7)
+		? AppM(r1, x + 2, y), IsRobotSingle(r1, 1)
+	#34
+	!r1,r2,xr1,xr2,yr1,yr2,b,n,x,y,w BlockMovedToEdge(b), IsBlockOnPosition(b, 0), Pos(b, x, y), W(w), x >f w / 2, ~
+				IsRobotSingle(r1, 0), Pos(r1, xr1, yr1), IsRobotSingle(r2, 0), Pos(r2, xr2, yr2), r1 != r2, yr1 == y - 1, yr2 == y - 1, ~
+				dist(xr1, yr1, x + 2, y) >f dist(xr2, yr2, x + 2, y) $ remove_fact(5), remove_fact(7)
+		? AppM(r2, x + 2, y), IsRobotSingle(r2, 1)
 	#--------8
 	#Два правила для проверки достижения второго пункта назначения. Поворот робота в нужном направлении. 
+	#35
 	!r,b,n,x,y,d BlockMovedToEdge(b), Pos(b, x, y), B(b), AppM(r, x - 1, y), Pos(r, x - 1, y), R(r, d) $ remove_fact(3), remove_fact(5)
 		? Ready(r, 2), R(r, E)
+	#36
 	!r,b,n,x,y,d BlockMovedToEdge(b), Pos(b, x, y), B(b), AppM(r, x + 2, y), Pos(r, x + 2, y), R(r, d) $ remove_fact(3), remove_fact(5)
 		? Ready(r, 2), R(r, W)
 	#--------9
-	#Последние правила соответствуют перемещению робота и блока. Эти правила добавят к базе факт, который завершит вывод.
-	!b,x,y,r,xr,yr Ready(r, 2), R(r, E), Pos(r, xr, yr), B(b), Pos(b, x, y), Free(x + 2, y, 1), Free(xr, yr, 0), SubTaskComplete(b, 0) $ remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6)
+	#Последние правила соответствуют перемещению робота, толкающего блок по горизонтали
+	#37
+	!b,x,y,r,xr,yr Ready(r, 2), R(r, E), Pos(r, xr, yr), B(b), Pos(b, x, y), Free(x + 2, y, 1), Free(xr, yr, 0), IsBlockOnPosition(b, 0) $ remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6)
 		? Pos(r, xr + 1, yr), Pos(b, x + 1, y), Free(x + 2, y, 0), Free(xr, yr, 1)
-			#Тут надо также удалить привязку другого робота к паре
-			! h, r2 Ready(r, 2), Pair(r, r2), B(b), Pos(b, x + 1, y), x + 1 == 4, H(h), ~
-					Free(1, h, 1), Free(2, h, 1), Free(6, h, 1), Free(7, h, 1), Free(8, h, 1) $ remove_fact(0), remove_fact(1), remove_fact(3), remove_fact(6), remove_fact(7), remove_fact(8), remove_fact(9), remove_fact(10), answer_once()
-				? SubTaskComplete(b, 1), Ready(r, 3), Ready(r2, 3), BlockOnPosition(b, x + 1, h), ~
-					Free(1, h, 0), Free(2, h, 0), Free(6, h, 0), Free(7, h, 0), Free(8, h, 0)
-	!b,x,y,r,xr,yr Ready(r, 2), R(r, W), Pos(r, xr, yr), B(b), Pos(b, x, y), Free(x - 1, y, 1), Free(xr, yr, 0), SubTaskComplete(b, 0) $ remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6)
+			#Проверка достижения цели по горизонтали
+			#Добавляем инфу о том, что последний ряд клеток занят
+			! Ready(r, 2), B(b), Pos(b, x + 1, y), x + 1 == 4, ~
+					Free(1, y, 1), Free(2, y, 1), Free(6, y, 1), Free(7, y, 1), Free(8, y, 1), ~
+					IsBlockOnPosition(b, 0), IsRobotSingle(r, 1) $ remove_fact(0), remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6), remove_fact(7), remove_fact(8), remove_fact(9), remove_fact(10), answer_once()
+				? IsBlockOnPosition(b, 1), BlockOnPosition(b, x + 1, y), ~
+					Free(1, y, 0), Free(2, y, 0), Free(6, y, 0), Free(7, y, 0), Free(8, y, 0)
+	#38
+	!b,x,y,r,xr,yr Ready(r, 2), R(r, W), Pos(r, xr, yr), B(b), Pos(b, x, y), Free(x - 1, y, 1), Free(xr, yr, 0), IsBlockOnPosition(b, 0) $ remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6)
 		? Pos(r, xr - 1, yr), Pos(b, x - 1, y), Free(x - 1, y, 0), Free(xr, yr, 1)
-			#Тут надо также удалить привязку другого робота к паре
-			! h, r2 Ready(r, 2), Pair(r, r2), B(b), Pos(b, x - 1, y), x - 1 == 4, H(h), ~
-					Free(1, h, 1), Free(2, h, 1), Free(3, h, 1), Free(7, h, 1), Free(8, h, 1) $ remove_fact(0), remove_fact(1), remove_fact(3), remove_fact(6), remove_fact(7), remove_fact(8), remove_fact(9), remove_fact(10), answer_once()
-				? SubTaskComplete(b, 1), Ready(r, 3), Ready(r2, 3), BlockOnPosition(b, x - 1, h), ~
-					Free(1, h, 0), Free(2, h, 0), Free(3, h, 0), Free(7, h, 0), Free(8, h, 0)
+			#Проверка достижения цели по горизонтали
+			#Добавляем инфу о том, что последний ряд клеток занят
+			!  Ready(r, 2), B(b), Pos(b, x - 1, y), x - 1 == 4, ~
+					Free(1, y, 1), Free(2, y, 1), Free(3, y, 1), Free(7, y, 1), Free(8, y, 1), ~
+					IsBlockOnPosition(b, 0), IsRobotSingle(r, 1) $ remove_fact(0), remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6), remove_fact(7), remove_fact(8), remove_fact(9), remove_fact(10), answer_once()
+				? IsBlockOnPosition(b, 1), BlockOnPosition(b, x - 1, y), ~
+					Free(1, y, 0), Free(2, y, 0), Free(3, y, 0), Free(7, y, 0), Free(8, y, 0)
 	#Goal questions
+	#39
 	! b1, b2, x1, x2, y1, y2 BlockOnPosition(b1, x1, y1), BlockOnPosition(b2, x2, y2), b1 != b2
 		? Pos(b1, x1, y1), Pos(b2, x2, y2)
+	#40
 	! Pos(B1, 4, 10), Pos(B2, 4, 9)
+	#41
 	! Pos(B1, 4, 9), Pos(B2, 4, 10)
