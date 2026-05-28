@@ -26,7 +26,7 @@
 	#1
 	! IsBlockOnPosition(B1, 0), IsBlockOnPosition(B2, 1)
 		? TargetBlock(B1)
-	#2
+	# #2
 	! IsBlockOnPosition(B2, 0), IsBlockOnPosition(B1, 1)
 		? TargetBlock(B2)
 
@@ -83,6 +83,7 @@
 	# Если расстояние между одной из соседних клеток до цели меньше чем 
 	# расстояния от других соседних клеток, то поворачиваем в эту сторону
 	#8
+
 	!r, x, y, u, v, d R(r, d), Pos(r, x, y), AppM(r, u, v), ~
 				dist(x, y + 1, u, v) <f dist(x - 1, y, u, v), ~
 				dist(x, y + 1, u, v) <f dist(x + 1, y, u, v), ~
