@@ -120,7 +120,7 @@ impl Question{
 		// 		self.curr_answer_stack.push(new_top);
 		// 	}
 		// }else{
-			let new_top = Answer::new(bid, self.qid, base.len(), tqfs[self.aformula.0].conj.len());
+			let new_top = Answer::new(bid, self.qid, base, tqfs[self.aformula.0].conj.len());
 			self.curr_answer_stack.push(new_top);
 		// }
 
@@ -136,7 +136,7 @@ impl Question{
 			curr_answer.tick += 1;
 			match &curr_answer.state{
 				MatchingState::Success | MatchingState::NextA | MatchingState::Zero => {
-					curr_answer.next_a(psterms, &tqfs[self.aformula.0], base);
+					curr_answer.next_a(psterms, &tqfs[self.aformula.0]);
 					continue;
 				},
 				MatchingState::NextB | MatchingState::Fail => {
@@ -145,14 +145,18 @@ impl Question{
 				},
 				MatchingState::Ready => {
 					match curr_answer.last().unwrap(){
-						LogItem::Matching{batom_i, qatom_i, ..} => {
-							let bterm = &base[*batom_i];
-							if attributes.check(KeyObject::BaseIndex(*batom_i), AttributeName("deleted".to_string()), AttributeValue("true".to_string())){
+						LogItem::Matching{batom_id, qatom_i, ..} => {
+							let btid = if let Some(btid) = base.term_by_id(*batom_id){
+								btid
+							}else{
+								curr_answer.state = MatchingState::Fail;
+								continue;
+							};
+							if attributes.check(KeyObject::BaseAtom(*batom_id), AttributeName("deleted".to_string()), AttributeValue("true".to_string())){
 								
 								curr_answer.state = MatchingState::Fail;
 								continue;
 							}
-							let btid = bterm.term;
 							let qtid = tqfs[self.aformula.0].conj[*qatom_i];	
 
 							if matching(btid, qtid, context, &mut curr_answer, psterms, base, attributes, bid){
@@ -201,7 +205,8 @@ impl Question{
 				},
 				MatchingState::Exhausted => {
 					// println!("Exhausted state");
-					if curr_answer.shift_bounds(base.len()){
+					curr_answer.refresh_candidates(base);
+					if curr_answer.shift_bounds(){
 						curr_answer.state = MatchingState::Zero;
 					}else{
 						break;

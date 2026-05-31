@@ -84,6 +84,14 @@ impl Solver{
 		Self::export_term_with(&self.psterms, tid)
 	}
 
+	fn is_base_atom_deleted(&self, id: BaseAtomId) -> bool{
+		self.attributes.check(
+			KeyObject::BaseAtom(id),
+			AttributeName("deleted".to_string()),
+			AttributeValue("true".to_string())
+		)
+	}
+
 	fn export_formula(&self, tid: TqfId) -> JsonFormula{
 		let tqf = &self.tqfs[tid.0];
 		JsonFormula{
@@ -98,14 +106,10 @@ impl Solver{
 	}
 
 	fn export_base(&self) -> Vec<JsonBaseItem>{
-		self.base.base.iter().enumerate().map(|(i, b)| {
+		self.base.base.iter().map(|b| {
 			JsonBaseItem{
 				atom: self.export_term(b.term),
-				deleted: self.attributes.check(
-					KeyObject::BaseIndex(i),
-					AttributeName("deleted".to_string()),
-					AttributeValue("true".to_string())
-				),
+				deleted: self.is_base_atom_deleted(b.id),
 			}
 		}).collect()
 	}
@@ -167,10 +171,10 @@ impl Solver{
 	pub fn print(&mut self){
 		println!("\nCurrent formula:");
 		print!("Base: ");
-		let mut base_json = vec![];
+		let base_json = self.export_base();
 
-		for (i,b) in self.base.base.iter().enumerate(){
-			let deleted = self.attributes.check(KeyObject::BaseIndex(i), AttributeName("deleted".to_string()), AttributeValue("true".to_string()));
+		for (i,(b, exported)) in self.base.base.iter().zip(base_json.iter()).enumerate(){
+			let deleted = exported.deleted;
 			if deleted{ print!("["); }
 
 			let td1 = TidDisplay{
@@ -181,10 +185,6 @@ impl Solver{
 			};
 
 			print!("{}", &td1);
-			base_json.push(JsonBaseItem{
-				atom: self.export_term(b.term),
-				deleted: deleted,
-			});
 
 			if deleted{ print!("]"); }
 			if i < self.base.len() - 1{ print!(", "); }
@@ -231,7 +231,7 @@ impl Solver{
 			atqf: tid,
 			eindex: 0,
 			context: Context::new_empty(),
-			bid: BlockId(1),
+			bid: BlockId(0),
 			psterms_car: psterms.len(),
 			enabled: false,
 		};
@@ -534,7 +534,7 @@ impl Solver{
 				let mut used_term_ids: Vec<TermId> = env.answer.get_batoms()
 					.into_iter()
 					.flatten()
-					.map(|batom_i| env.base[batom_i].term)
+					.filter_map(|batom_id| env.base.get_by_id(batom_id).map(|b| b.term))
 					.collect();
 				used_term_ids.dedup();
 

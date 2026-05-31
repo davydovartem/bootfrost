@@ -1,6 +1,6 @@
 Arguments { formula: "branch1.pcf", strategy: "general", limit: 100, json: false }
 ? A(a,e), R(1)
-	!x R(x)
+	!x R(x) $ remove_fact(0)
 		? R(x + 1)
 	!x,y A(x,y)
 		? B(x)
@@ -14,7 +14,7 @@ Current formula:
 Base: A(a, e), R(1)
 
 Questions:
-(0) !x.39 R(x.39) 
+(0) !x.39 R(x.39) $ remove_fact(0)
     ? R(x.39 + 1) 
 (1) !x.40,y.41 A(x.40, y.41) 
     ? B(x.40) 
@@ -38,10 +38,10 @@ Terms used in the base: R(1),
 New questions: NO.
 
 Current formula:
-Base: A(a, e), R(1), R(2)
+Base: A(a, e), [R(1)], R(2)
 
 Questions:
-(0) !x.39 R(x.39) 
+(0) !x.39 R(x.39) $ remove_fact(0)
     ? R(x.39 + 1) 
 (1) !x.40,y.41 A(x.40, y.41) 
     ? B(x.40) 
@@ -65,10 +65,10 @@ Terms used in the base: A(a, e),
 New questions: NO.
 
 Current formula:
-Base: A(a, e), R(1), R(2), B(a)
+Base: A(a, e), [R(1)], R(2), B(a)
 
 Questions:
-(0) !x.39 R(x.39) 
+(0) !x.39 R(x.39) $ remove_fact(0)
     ? R(x.39 + 1) 
 (1) !x.40,y.41 A(x.40, y.41) 
     ? B(x.40) 
@@ -85,17 +85,17 @@ No answers have been found (selected).
 Try question 3
 No answers have been found (selected).
 Try question 0
-New answer has been found: {x -> 2}+10
-0: {x -> 2}+10
+New answer has been found: {x -> 2}+8
+0: {x -> 2}+8
 Terms added to the base: R(3)
 Terms used in the base: R(2), 
 New questions: NO.
 
 Current formula:
-Base: A(a, e), R(1), R(2), B(a), R(3)
+Base: A(a, e), [R(1)], [R(2)], B(a), R(3)
 
 Questions:
-(0) !x.39 R(x.39) 
+(0) !x.39 R(x.39) $ remove_fact(0)
     ? R(x.39 + 1) 
 (1) !x.40,y.41 A(x.40, y.41) 
     ? B(x.40) 
@@ -116,10 +116,10 @@ Terms used in the base: A(a, e),
 New questions: NO.
 
 Current formula:
-Base: A(a, e), R(1), R(2), C(e)
+Base: A(a, e), [R(1)], R(2), C(e)
 
 Questions:
-(0) !x.39 R(x.39) 
+(0) !x.39 R(x.39) $ remove_fact(0)
     ? R(x.39 + 1) 
 (1) !x.40,y.41 A(x.40, y.41) 
     ? B(x.40) 
@@ -136,17 +136,17 @@ No answers have been found (selected).
 Try question 3
 No answers have been found (selected).
 Try question 0
-New answer has been found: {x -> 2}+10
-0: {x -> 2}+10
+New answer has been found: {x -> 2}+8
+0: {x -> 2}+8
 Terms added to the base: R(3)
 Terms used in the base: R(2), 
 New questions: NO.
 
 Current formula:
-Base: A(a, e), R(1), R(2), C(e), R(3)
+Base: A(a, e), [R(1)], [R(2)], C(e), R(3)
 
 Questions:
-(0) !x.39 R(x.39) 
+(0) !x.39 R(x.39) $ remove_fact(0)
     ? R(x.39 + 1) 
 (1) !x.40,y.41 A(x.40, y.41) 
     ? B(x.40) 
@@ -163,17 +163,17 @@ No answers have been found (selected).
 Try question 3
 No answers have been found (selected).
 Try question 0
-New answer has been found: {x -> 3}+16
-0: {x -> 3}+16
+New answer has been found: {x -> 3}+12
+0: {x -> 3}+12
 Terms added to the base: R(4)
 Terms used in the base: R(3), 
 New questions: NO.
 
 Current formula:
-Base: A(a, e), R(1), R(2), C(e), R(3), R(4)
+Base: A(a, e), [R(1)], [R(2)], C(e), [R(3)], R(4)
 
 Questions:
-(0) !x.39 R(x.39) 
+(0) !x.39 R(x.39) $ remove_fact(0)
     ? R(x.39 + 1) 
 (1) !x.40,y.41 A(x.40, y.41) 
     ? B(x.40) 

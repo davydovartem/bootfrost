@@ -12,7 +12,7 @@ pub struct AttributeValue(pub String);
 
 #[derive(Hash, Eq, PartialEq, Clone, Debug, Deserialize, Serialize)]
 pub enum KeyObject{
-	BaseIndex(usize),
+	BaseAtom(BaseAtomId),
 }
 
 

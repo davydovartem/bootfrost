@@ -36,3 +36,10 @@ fn test_remove(){
 	let r = solver.solver_loop(150);
 	assert_eq!(SolverResultType::Refuted, r.t);
 }
+
+#[test]
+fn test_block_branch(){
+	let mut solver = Solver::parse_file("./problems/BlockBranchTest.pcsf", Strategy::General);
+	let r = solver.solver_loop(150);
+	assert_eq!(SolverResultType::Refuted, r.t);
+}

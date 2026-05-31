@@ -380,9 +380,8 @@ fn base_to_string(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 	
 	let bstr = env.base.base
 		.iter()
-		.enumerate()
-		.filter(|(i,_)|!env.attributes.check(KeyObject::BaseIndex(*i), AttributeName("deleted".to_string()), AttributeValue("true".to_string())))
-		.map(|(_,x)|
+		.filter(|x|!env.attributes.check(KeyObject::BaseAtom(x.id), AttributeName("deleted".to_string()), AttributeValue("true".to_string())))
+		.map(|x|
 			TidDisplay{
 				tid: x.term,
 				psterms: &env.psterms,
@@ -406,13 +405,13 @@ fn remove_fact(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 		panic!("");
 	};
 
-	let b = if let LogItem::Matching{batom_i: b, ..} = env.answer.log[i as usize]{
+	let b = if let LogItem::Matching{batom_id: b, ..} = env.answer.log[i as usize]{
 		b
 	}else{
 		panic!("");
 	};
 
-	env.attributes.set_attribute(KeyObject::BaseIndex(b), AttributeName("deleted".to_string()), AttributeValue("true".to_string()), env.bid);
+	env.attributes.set_attribute(KeyObject::BaseAtom(b), AttributeName("deleted".to_string()), AttributeValue("true".to_string()), env.bid);
 
 	env.psterms.get_tid(Term::Bool(true)).unwrap()	
 }
@@ -451,19 +450,17 @@ pub fn print_batoms(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 		panic!("");
 	}
 
-	let mut vector = env.answer.get_batoms();
-	vector.retain(|s| s.is_some());
 	print!("Terms used in the base: ");
-	for v in vector{
-		if let Some(b) = v{
+	for b in env.answer.get_batoms().into_iter().flatten(){
+		if let Some(bt) = env.base.get_by_id(b){
 			print!("{}, ", TidDisplay{
-				tid: env.base[b].term,
+				tid: bt.term,
 				psterms: env.psterms,
 				context: None,
 				dm: DisplayMode::Plain,
 			});
 		}else{
-			print!("=i=,");
+			print!("<stale_batom_id:{}>, ", b.0);
 		}
 	}
 

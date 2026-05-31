@@ -318,22 +318,22 @@
 	#36
 	!r1,r2,xr1,xr2,yr1,yr2,b,n,x,y,w BlockMovedToEdge(b), IsBlockOnPosition(b, 0), Pos(b, x, y), W(w), x <f w / 2, ~
 				IsRobotSingle(r1, 0), Pos(r1, xr1, yr1), IsRobotSingle(r2, 0), Pos(r2, xr2, yr2), r1 != r2, yr1 == y - 1, yr2 == y - 1, ~
-				dist(xr1, yr1, x - 1, y) <=f dist(xr2, yr2, x - 1, y) $ remove_fact(5), remove_fact(7)
+				dist(xr1, yr1, x - 1, y) <=f dist(xr2, yr2, x - 1, y)
 		? AppM(r1, x - 1, y), IsRobotSingle(r1, 1)
 	#37
 	!r1,r2,xr1,xr2,yr1,yr2,b,n,x,y,w BlockMovedToEdge(b), IsBlockOnPosition(b, 0), Pos(b, x, y), W(w), x <f w / 2, ~
 				IsRobotSingle(r1, 0), Pos(r1, xr1, yr1), IsRobotSingle(r2, 0), Pos(r2, xr2, yr2), r1 != r2, yr1 == y - 1, yr2 == y - 1, ~
-				dist(xr1, yr1, x - 1, y) >f dist(xr2, yr2, x - 1, y) $ remove_fact(5), remove_fact(7)
+				dist(xr1, yr1, x - 1, y) >f dist(xr2, yr2, x - 1, y)
 		? AppM(r2, x - 1, y), IsRobotSingle(r2, 1)
 	#38
 	!r1,r2,xr1,xr2,yr1,yr2,b,n,x,y,w BlockMovedToEdge(b), IsBlockOnPosition(b, 0), Pos(b, x, y), W(w), x >f w / 2, ~
 				IsRobotSingle(r1, 0), Pos(r1, xr1, yr1), IsRobotSingle(r2, 0), Pos(r2, xr2, yr2), r1 != r2, yr1 == y - 1, yr2 == y - 1, ~
-				dist(xr1, yr1, x + 2, y) <=f dist(xr2, yr2, x + 2, y) $ remove_fact(5), remove_fact(7)
+				dist(xr1, yr1, x + 2, y) <=f dist(xr2, yr2, x + 2, y)
 		? AppM(r1, x + 2, y), IsRobotSingle(r1, 1)
 	#39
 	!r1,r2,xr1,xr2,yr1,yr2,b,n,x,y,w BlockMovedToEdge(b), IsBlockOnPosition(b, 0), Pos(b, x, y), W(w), x >f w / 2, ~
 				IsRobotSingle(r1, 0), Pos(r1, xr1, yr1), IsRobotSingle(r2, 0), Pos(r2, xr2, yr2), r1 != r2, yr1 == y - 1, yr2 == y - 1, ~
-				dist(xr1, yr1, x + 2, y) >f dist(xr2, yr2, x + 2, y) $ remove_fact(5), remove_fact(7)
+				dist(xr1, yr1, x + 2, y) >f dist(xr2, yr2, x + 2, y)
 		? AppM(r2, x + 2, y), IsRobotSingle(r2, 1)
 	#--------8
 	#Два правила для проверки достижения второго пункта назначения. Поворот робота в нужном направлении. 
