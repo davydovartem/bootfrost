@@ -3,18 +3,18 @@
 	IsRobotInPair(1, 0), IsRobotInPair(2, 0), IsRobotInPair(3, 0), ~
 	IsRobotSingle(1, 0), IsRobotSingle(2, 0), IsRobotSingle(3, 0), ~
 	Pos(1, 1, 8), Pos(2, 7, 7), Pos(3, 7, 2), Pos(B1, 6, 5), Pos(B2, 2, 3), ~
-	Free(0,11,0),	Free(1,11,0), 	Free(2,11,0), 	Free(3,11,0), 	Free(4,11,0), 	Free(5,11,0), 	Free(6,11,0), 	Free(7,11,0), 	Free(8,11,0),	Free(9,11,0), ~
-	Free(0,10,0),	Free(1,10,1), 	Free(2,10,1), 	Free(3,10,1), 	Free(4,10,1), 	Free(5,10,1), 	Free(6,10,1), 	Free(7,10,1), 	Free(8,10,1),	Free(9,10,0), ~
-	Free(0,9,0),	Free(1,9,1), 	Free(2,9,1), 	Free(3,9,1), 	Free(4,9,1), 	Free(5,9,1), 	Free(6,9,1), 	Free(7,9,1), 	Free(8,9,1),	Free(9,9,0), ~
-	Free(0,8,0),	Free(1,8,0), 	Free(2,8,1), 	Free(3,8,1), 	Free(4,8,1), 	Free(5,8,1), 	Free(6,8,1), 	Free(7,8,1), 	Free(8,8,1),	Free(9,8,0), ~
-	Free(0,7,0),	Free(1,7,1), 	Free(2,7,1), 	Free(3,7,1), 	Free(4,7,1), 	Free(5,7,1), 	Free(6,7,1), 	Free(7,7,0),	Free(8,7,1),	Free(9,7,0), ~
-	Free(0,6,0),	Free(1,6,1), 	Free(2,6,1), 	Free(3,6,1), 	Free(4,6,1), 	Free(5,6,1), 	Free(6,6,1), 	Free(7,6,1), 	Free(8,6,1),	Free(9,6,0), ~
-	Free(0,5,0),	Free(1,5,1), 	Free(2,5,1), 	Free(3,5,1), 	Free(4,5,1), 	Free(5,5,1), 	Free(6,5,0),	Free(7,5,0),	Free(8,5,1),	Free(9,5,0), ~
-	Free(0,4,0),	Free(1,4,1), 	Free(2,4,1), 	Free(3,4,1), 	Free(4,4,1), 	Free(5,4,1), 	Free(6,4,1), 	Free(7,4,1), 	Free(8,4,1),	Free(9,4,0), ~
-	Free(0,3,0),	Free(1,3,1), 	Free(2,3,0), 	Free(3,3,0),	Free(4,3,1), 	Free(5,3,1), 	Free(6,3,1), 	Free(7,3,1), 	Free(8,3,1),	Free(9,3,0), ~
-	Free(0,2,0),	Free(1,2,1), 	Free(2,2,1), 	Free(3,2,1), 	Free(4,2,1), 	Free(5,2,1), 	Free(6,2,1), 	Free(7,2,0),	Free(8,2,1),	Free(9,2,0), ~
-	Free(0,1,0),	Free(1,1,1), 	Free(2,1,1), 	Free(3,1,1), 	Free(4,1,1), 	Free(5,1,1), 	Free(6,1,1), 	Free(7,1,1), 	Free(8,1,1),	Free(9,1,0), ~
-	Free(0,0,0),	Free(1,0,0), 	Free(2,0,0), 	Free(3,0,0), 	Free(4,0,0), 	Free(5,0,0), 	Free(6,0,0), 	Free(7,0,0), 	Free(8,0,0), 	Free(9,0,0) 
+	Cells([[0,0,0,0,0,0,0,0,0,0], ~	# y=0  (низ,  стена)
+	       [0,1,1,1,1,1,1,1,1,0], ~	# y=1
+	       [0,1,1,1,1,1,1,0,1,0], ~	# y=2
+	       [0,1,0,0,1,1,1,1,1,0], ~	# y=3
+	       [0,1,1,1,1,1,1,1,1,0], ~	# y=4
+	       [0,1,1,1,1,1,0,0,1,0], ~	# y=5
+	       [0,1,1,1,1,1,1,1,1,0], ~	# y=6
+	       [0,1,1,1,1,1,1,0,1,0], ~	# y=7
+	       [0,0,1,1,1,1,1,1,1,0], ~	# y=8
+	       [0,1,1,1,1,1,1,1,1,0], ~	# y=9
+	       [0,1,1,1,1,1,1,1,1,0], ~	# y=10
+	       [0,0,0,0,0,0,0,0,0,0]])	# y=11 (верх, стена)
 	#--------1.1
 	# Сначала выбираем целевой блок. Ветвление только по блоку.
 	#0
@@ -109,8 +109,6 @@
 		? R(r, E)
 	#--------3
 	#Эта часть правил соответствует движению роботов в ориентированном направлении. 
-	#Проверка расстояния между текущим положением робота и назначенной целью является
-	#эвристикой для сокращения пространства поиска
 	#12
 	!r,x,y,u,v  R(r, N), Pos(r, x, y), Free(x, y, 0), Free(x, y + 1, 1), AppM(r,u,v), ~
 				dist(x, y, u, v) >f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3)
@@ -129,7 +127,7 @@
 		? Pos(r, x - 1, y), Free(x, y, 1), Free(x - 1, y, 0)
 	#--------3.5
 	#Обход препятствия
-	#Пробуем такую логику: если клетка, куда смотрит робот, занята, и левая
+	#Если клетка, куда смотрит робот, занята, и левая
 	# и правая соседние клетки свободны, то двигаемся в ту сторону, которая ближе к цели
 	# Если клетка слева или справа, являющаяся занятой и ближе к цели чем другая, то отскакиваем назад и
 	# поворачиваем и перемещаемся к той клетке, которая ближе к цели.
@@ -137,134 +135,150 @@
 	#16
 	! r, x, y, u, v R(r, N), Pos(r, x, y), AppM(r, u, v), Free(x, y + 1, 0), or(x != u, y != v), ~
 					Free(x - 1, y, 1), Free(x, y, 0), ~
-					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
-		? R(r, W), Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1)
+					dist(x - 1, y, u, v) <f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(5), remove_fact(6)
+		? Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1), AvoidWall(r, L)
 	#17
 	! r, x, y, u, v R(r, N), Pos(r, x, y), AppM(r, u, v), Free(x, y + 1, 0), or(x != u, y != v), ~
 					Free(x + 1, y, 1), Free(x, y, 0), ~
-					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
-		? R(r, E), Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1)
+					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(5), remove_fact(6)
+		? Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1), AvoidWall(r, R)
 	# Если "хорошее лево" занято, то отскакиваем назад
 	#18
 	! r, x, y, u, v R(r, N), Pos(r, x, y), AppM(r, u, v), Free(x, y + 1, 0), Free(x, y, 0), Free(x, y - 1, 1), or(x != u, y != v), ~
 					Free(x - 1, y, 0), dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1), Avoid(r)
-			! x, y R(r, N), Pos(r, x, y ), Free(x - 1, y, 1), Free(x, y, 0), Avoid(r), ~
+		? Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1), AvoidWall(r, L)
+			! x, y R(r, N), Pos(r, x, y ), Free(x - 1, y, 1), Free(x, y, 0), AvoidWall(r, L), ~
 					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
 				? R(r, W), Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1)
-			! x, y R(r, N), Pos(r, x, y ), Free(x + 1, y, 1), Free(x, y, 0), Avoid(r), ~
-					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
-				? R(r, E), Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1)
 	# "хорошее право" занято, отскакиваем назад
 	#19
 	! r, x, y, u, v R(r, N), Pos(r, x, y), AppM(r, u, v), Free(x, y + 1, 0), Free(x, y, 0), Free(x, y - 1, 1), or(x != u, y != v), ~
 					Free(x + 1, y, 0), dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1), Avoid(r)
-			! x, y R(r, N), Pos(r, x, y ), Free(x - 1, y, 1), Free(x, y, 0), Avoid(r), ~
-					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
-				? R(r, W), Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1)
-			! x, y R(r, N), Pos(r, x, y ), Free(x + 1, y, 1), Free(x, y, 0), Avoid(r), ~
+		? Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1), AvoidWall(r, R)
+			! x, y R(r, N), Pos(r, x, y ), Free(x + 1, y, 1), Free(x, y, 0), AvoidWall(r, R), ~
 					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
 				? R(r, E), Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1)
 	# East
 	#20
 	! r, x, y, u, v R(r, E), Pos(r, x, y), AppM(r, u, v), Free(x + 1, y, 0), or(x != u, y != v), ~
 					Free(x, y + 1, 1), Free(x, y, 0), ~
-					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
-		? R(r, N), Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1)
+					dist(x, y + 1, u, v) <f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(5), remove_fact(6)
+		? Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1), AvoidWall(r, L)
 	#21
 	! r, x, y, u, v R(r, E), Pos(r, x, y), AppM(r, u, v), Free(x + 1, y, 0), or(x != u, y != v), ~
 					Free(x, y - 1, 1), Free(x, y, 0), ~
-					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
-		? R(r, S), Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1)
+					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(5), remove_fact(6)
+		? Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1), AvoidWall(r, R)
 	# Если "хорошее лево" занято, то отскакиваем назад
 	#22
 	! r, x, y, u, v R(r, E), Pos(r, x, y), AppM(r, u, v), Free(x + 1, y, 0), Free(x, y, 0), Free(x - 1, y, 1), or(x != u, y != v), ~
 					Free(x, y + 1, 0), dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1), Avoid(r)
-			! x, y R(r, E), Pos(r, x, y), Free(x, y + 1, 1), Free(x, y, 0), Avoid(r), ~
+		? Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1), AvoidWall(r, L)
+			! x, y R(r, E), Pos(r, x, y), Free(x, y + 1, 1), Free(x, y, 0), AvoidWall(r, L), ~
 					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
 				? R(r, N), Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1)
-			! x, y R(r, E), Pos(r, x, y), Free(x, y - 1, 1), Free(x, y, 0), Avoid(r), ~
-					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
-				? R(r, S), Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1)
 	# "хорошее право" занято, отскакиваем назад
 	#23
 	! r, x, y, u, v R(r, E), Pos(r, x, y), AppM(r, u, v), Free(x + 1, y, 0), Free(x, y, 0), Free(x - 1, y, 1), or(x != u, y != v), ~
 					Free(x, y - 1, 0), dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1), Avoid(r)
-			! x, y R(r, E), Pos(r, x, y), Free(x, y + 1, 1), Free(x, y, 0), Avoid(r), ~
-					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
-				? R(r, N), Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1)
-			! x, y R(r, E), Pos(r, x, y), Free(x, y - 1, 1), Free(x, y, 0), Avoid(r), ~
+		? Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1), AvoidWall(r, R)
+			! x, y R(r, E), Pos(r, x, y), Free(x, y - 1, 1), Free(x, y, 0), AvoidWall(r, R), ~
 					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
 				? R(r, S), Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1)
 	# South
 	#24
 	! r, x, y, u, v R(r, S), Pos(r, x, y), AppM(r, u, v), Free(x, y - 1, 0), or(x != u, y != v), ~
 					Free(x + 1, y, 1), Free(x, y, 0), ~
-					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
-		? R(r, E), Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1)
+					dist(x + 1, y, u, v) <f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(5), remove_fact(6)
+		? Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1), AvoidWall(r, L)
 	#25
 	! r, x, y, u, v R(r, S), Pos(r, x, y), AppM(r, u, v), Free(x, y - 1, 0), or(x != u, y != v), ~
 					Free(x - 1, y, 1), Free(x, y, 0), ~
-					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
-		? R(r, W), Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1)
+					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(5), remove_fact(6)
+		? Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1), AvoidWall(r, R)
 	# Если "хорошее лево" занято, то отскакиваем назад
 	#26
 	! r, x, y, u, v R(r, S), Pos(r, x, y), AppM(r, u, v), Free(x, y - 1, 0), Free(x, y, 0), Free(x, y + 1, 1), or(x != u, y != v), ~
 					Free(x + 1, y, 0), dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1), Avoid(r)
-			! x, y R(r, S), Pos(r, x, y), Free(x + 1, y, 1), Free(x, y, 0), Avoid(r), ~
+		? Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1), AvoidWall(r, L)
+			! x, y R(r, S), Pos(r, x, y), Free(x + 1, y, 1), Free(x, y, 0), AvoidWall(r, L), ~
 					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
 				? R(r, E), Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1)
-			! x, y R(r, S), Pos(r, x, y), Free(x - 1, y, 1), Free(x, y, 0), Avoid(r), ~
-					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
-				? R(r, W), Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1)
 	# "хорошее право" занято, отскакиваем назад
 	#27
 	! r, x, y, u, v R(r, S), Pos(r, x, y), AppM(r, u, v), Free(x, y - 1, 0), Free(x, y, 0), Free(x, y + 1, 1), or(x != u, y != v), ~
 					Free(x - 1, y, 0), dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1), Avoid(r)
-			! x, y R(r, S), Pos(r, x, y), Free(x + 1, y, 1), Free(x, y, 0), Avoid(r), ~
-					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
-				? R(r, E), Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1)
-			! x, y R(r, S), Pos(r, x, y), Free(x - 1, y, 1), Free(x, y, 0), Avoid(r), ~
+		? Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1), AvoidWall(r, R)
+			! x, y R(r, S), Pos(r, x, y), Free(x - 1, y, 1), Free(x, y, 0), AvoidWall(r, R), ~
 					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
 				? R(r, W), Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1)
 	# West
 	#28
 	! r, x, y, u, v R(r, W), Pos(r, x, y), AppM(r, u, v), Free(x - 1, y, 0), or(x != u, y != v), ~
 					Free(x, y - 1, 1), Free(x, y, 0), ~
-					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
-		? R(r, S), Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1)
+					dist(x, y - 1, u, v) <f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(5), remove_fact(6)
+		? Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1), AvoidWall(r, L)
 	#29
 	! r, x, y, u, v R(r, W), Pos(r, x, y), AppM(r, u, v), Free(x - 1, y, 0), or(x != u, y != v), ~
 					Free(x, y + 1, 1), Free(x, y, 0), ~
-					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(5), remove_fact(6)
-		? R(r, N), Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1)
+					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(5), remove_fact(6)
+		? Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1), AvoidWall(r, R)
 	# Если "хорошее лево" занято, то отскакиваем назад
 	#30
 	! r, x, y, u, v R(r, W), Pos(r, x, y), AppM(r, u, v), Free(x - 1, y, 0), Free(x, y, 0), Free(x + 1, y, 1), or(x != u, y != v), ~
 					Free(x, y - 1, 0), dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1), Avoid(r)
-			! x, y R(r, W), Pos(r, x, y), Free(x, y - 1, 1), Free(x, y, 0), Avoid(r), ~
+		? Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1), AvoidWall(r, L)
+			! x, y R(r, W), Pos(r, x, y), Free(x, y - 1, 1), Free(x, y, 0), AvoidWall(r, L), ~
 					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
 				? R(r, S), Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1)
-			! x, y R(r, W), Pos(r, x, y), Free(x, y + 1, 1), Free(x, y, 0), Avoid(r), ~
-					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
-				? R(r, N), Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1)
 	# "хорошее право" занято, отскакиваем назад
 	#31
 	! r, x, y, u, v R(r, W), Pos(r, x, y), AppM(r, u, v), Free(x - 1, y, 0), Free(x, y, 0), Free(x + 1, y, 1), or(x != u, y != v), ~
 					Free(x, y + 1, 0), dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(4), remove_fact(5), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1), Avoid(r)
-			! x, y R(r, W), Pos(r, x, y), Free(x, y - 1, 1), Free(x, y, 0), Avoid(r), ~
-					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
-				? R(r, S), Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1)
-			! x, y R(r, W), Pos(r, x, y), Free(x, y + 1, 1), Free(x, y, 0), Avoid(r), ~
+		? Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1), AvoidWall(r, R)
+			! x, y R(r, W), Pos(r, x, y), Free(x, y + 1, 1), Free(x, y, 0), AvoidWall(r, R), ~
 					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(4), answer_once()
 				? R(r, N), Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1)
+
+	# Продолжение обхода по выбранной стороне
+	! r, x, y, u, v R(r, N), Pos(r, x, y), AppM(r, u, v), AvoidWall(r, L), Free(x, y + 1, 0), or(x != u, y != v), ~
+					Free(x - 1, y, 1), Free(x, y, 0) $ remove_fact(1), remove_fact(3), remove_fact(6), remove_fact(7), answer_once()
+		? Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1), AvoidWall(r, L)
+	! r, x, y, u, v R(r, N), Pos(r, x, y), AppM(r, u, v), AvoidWall(r, R), Free(x, y + 1, 0), or(x != u, y != v), ~
+					Free(x + 1, y, 1), Free(x, y, 0) $ remove_fact(1), remove_fact(3), remove_fact(6), remove_fact(7), answer_once()
+		? Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1), AvoidWall(r, R)
+	! r, x, y, u, v R(r, E), Pos(r, x, y), AppM(r, u, v), AvoidWall(r, L), Free(x + 1, y, 0), or(x != u, y != v), ~
+					Free(x, y + 1, 1), Free(x, y, 0) $ remove_fact(1), remove_fact(3), remove_fact(6), remove_fact(7), answer_once()
+		? Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1), AvoidWall(r, L)
+	! r, x, y, u, v R(r, E), Pos(r, x, y), AppM(r, u, v), AvoidWall(r, R), Free(x + 1, y, 0), or(x != u, y != v), ~
+					Free(x, y - 1, 1), Free(x, y, 0) $ remove_fact(1), remove_fact(3), remove_fact(6), remove_fact(7), answer_once()
+		? Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1), AvoidWall(r, R)
+	! r, x, y, u, v R(r, S), Pos(r, x, y), AppM(r, u, v), AvoidWall(r, L), Free(x, y - 1, 0), or(x != u, y != v), ~
+					Free(x + 1, y, 1), Free(x, y, 0) $ remove_fact(1), remove_fact(3), remove_fact(6), remove_fact(7), answer_once()
+		? Pos(r, x + 1, y), Free(x + 1, y, 0), Free(x, y, 1), AvoidWall(r, L)
+	! r, x, y, u, v R(r, S), Pos(r, x, y), AppM(r, u, v), AvoidWall(r, R), Free(x, y - 1, 0), or(x != u, y != v), ~
+					Free(x - 1, y, 1), Free(x, y, 0) $ remove_fact(1), remove_fact(3), remove_fact(6), remove_fact(7), answer_once()
+		? Pos(r, x - 1, y), Free(x - 1, y, 0), Free(x, y, 1), AvoidWall(r, R)
+	! r, x, y, u, v R(r, W), Pos(r, x, y), AppM(r, u, v), AvoidWall(r, L), Free(x - 1, y, 0), or(x != u, y != v), ~
+					Free(x, y - 1, 1), Free(x, y, 0) $ remove_fact(1), remove_fact(3), remove_fact(6), remove_fact(7), answer_once()
+		? Pos(r, x, y - 1), Free(x, y - 1, 0), Free(x, y, 1), AvoidWall(r, L)
+	! r, x, y, u, v R(r, W), Pos(r, x, y), AppM(r, u, v), AvoidWall(r, R), Free(x - 1, y, 0), or(x != u, y != v), ~
+					Free(x, y + 1, 1), Free(x, y, 0) $ remove_fact(1), remove_fact(3), remove_fact(6), remove_fact(7), answer_once()
+		? Pos(r, x, y + 1), Free(x, y + 1, 0), Free(x, y, 1), AvoidWall(r, R)
+
+	# Выход из обхода по стене при открытом проходе вперед
+	!r,x,y,u,v,s  R(r, N), Pos(r, x, y), Free(x, y, 0), Free(x, y + 1, 1), AppM(r,u,v), AvoidWall(r, s), ~
+				dist(x, y, u, v) >f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(5)
+		? Pos(r, x, y + 1), Free(x, y, 1), Free(x, y + 1, 0)
+	!r,x,y,u,v,s  R(r, E), Pos(r, x, y), Free(x, y, 0), Free(x + 1, y, 1), AppM(r,u,v), AvoidWall(r, s), ~
+				dist(x, y, u, v) >f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(5)
+		? Pos(r, x + 1, y), Free(x, y, 1), Free(x + 1, y, 0)
+	!r,x,y,u,v,s  R(r, S), Pos(r, x, y), Free(x, y, 0), Free(x, y - 1, 1), AppM(r,u,v), AvoidWall(r, s), ~
+				dist(x, y, u, v) >f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(5)
+		? Pos(r, x, y - 1), Free(x, y, 1), Free(x, y - 1, 0)
+	!r,x,y,u,v,s  R(r, W), Pos(r, x, y), Free(x, y, 0), Free(x - 1, y, 1), AppM(r,u,v), AvoidWall(r, s), ~
+				dist(x, y, u, v) >f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(5)
+		? Pos(r, x - 1, y), Free(x, y, 1), Free(x - 1, y, 0)
 
 	#--------4
 	#Проверка выполнения задания по подходу к блоку для передвижения его в паре. Если робот находится рядом с блоком и готов к его перемещению, то ему необходимо повернуть на север.
@@ -329,7 +343,8 @@
 	#--------9
 	#Последние правила соответствуют перемещению робота, толкающего блок по горизонтали
 	#42
-	!b,x,y,r,xr,yr Ready(r, 2), R(r, E), Pos(r, xr, yr), B(b), Pos(b, x, y), Free(x + 2, y, 1), Free(xr, yr, 0), IsBlockOnPosition(b, 0) $ remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6)
+	!b,x,y,r,xr,yr Ready(r, 2), R(r, E), Pos(r, xr, yr), B(b), Pos(b, x, y), Free(x + 2, y, 1), Free(xr, yr, 0), ~
+				IsBlockOnPosition(b, 0), yr == y $ remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6)
 		? Pos(r, xr + 1, yr), Pos(b, x + 1, y), Free(x + 2, y, 0), Free(xr, yr, 1)
 			#Проверка достижения цели по горизонтали
 			#Добавляем инфу о том, что последний ряд клеток занят
@@ -339,7 +354,8 @@
 				? IsBlockOnPosition(b, 1), BlockOnPosition(b, x + 1, y), ~
 					Free(1, y, 0), Free(2, y, 0), Free(6, y, 0), Free(7, y, 0), Free(8, y, 0)
 	#43
-	!b,x,y,r,xr,yr Ready(r, 2), R(r, W), Pos(r, xr, yr), B(b), Pos(b, x, y), Free(x - 1, y, 1), Free(xr, yr, 0), IsBlockOnPosition(b, 0) $ remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6)
+	!b,x,y,r,xr,yr Ready(r, 2), R(r, W), Pos(r, xr, yr), B(b), Pos(b, x, y), Free(x - 1, y, 1), Free(xr, yr, 0), ~
+				IsBlockOnPosition(b, 0), yr == y $ remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6)
 		? Pos(r, xr - 1, yr), Pos(b, x - 1, y), Free(x - 1, y, 0), Free(xr, yr, 1)
 			#Проверка достижения цели по горизонтали
 			#Добавляем инфу о том, что последний ряд клеток занят

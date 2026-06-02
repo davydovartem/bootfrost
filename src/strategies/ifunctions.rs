@@ -318,6 +318,152 @@ fn dedup(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 	env.psterms.get_tid(Term::List(res)).unwrap()
 }
 
+// lists
+fn get_1d(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
+	let arg0 = env.psterms.get_term(&args[0]);
+	let arg1 = env.psterms.get_term(&args[1]);
+
+	let i = if let Term::Integer(i) = arg0{
+		i
+	}else{
+		panic!("get(i, list): первый аргумент должен быть целым индексом");
+	};
+
+	let list = if let Term::List(l) = arg1{
+		l
+	}else{
+		panic!("get(i, list): второй аргумент должен быть списком");
+	};
+
+	if i < 0 || (i as usize) >= list.len(){
+		panic!("get(i, list): индекс {} вне границ (длина списка {})", i, list.len());
+	}
+
+	list[i as usize]
+}
+
+// lists
+fn get_at(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
+	match args.len(){
+		2 => get_1d(args, env),
+		3 => {
+			// get(i, j, matrix) == matrix[i][j]  (стандарт: i - строка, j - столбец)
+			let arg_i = env.psterms.get_term(&args[0]);
+			let i = if let Term::Integer(i) = arg_i{
+				i
+			}else{
+				panic!("get(i, j, matrix): первый аргумент i должен быть целым индексом строки");
+			};
+
+			let matrix = env.psterms.get_term(&args[2]);
+			let rows = if let Term::List(rows) = matrix{
+				rows
+			}else{
+				panic!("get(i, j, matrix): третий аргумент должен быть списком списков");
+			};
+
+			if i < 0 || (i as usize) >= rows.len(){
+				panic!("get(i, j, matrix): индекс строки i={} вне границ (число строк {})", i, rows.len());
+			}
+
+			let row_tid = rows[i as usize];
+			let row_term = env.psterms.get_term(&row_tid);
+			let row = if let Term::List(r) = row_term{
+				r
+			}else{
+				panic!("get(i, j, matrix): строка i={} не является списком", i);
+			};
+
+			let j = if let Term::Integer(j) = env.psterms.get_term(&args[1]){
+				j
+			}else{
+				panic!("get(i, j, matrix): второй аргумент j должен быть целым индексом столбца");
+			};
+
+			if j < 0 || (j as usize) >= row.len(){
+				panic!("get(i, j, matrix): индекс столбца j={} вне границ (длина строки i={}: {})", j, i, row.len());
+			}
+
+			row[j as usize]
+		},
+		_ => panic!("get: ожидается 2 (get(i, list)) или 3 (get(i, j, matrix)) аргумента, получено {}", args.len()),
+	}
+}
+
+// lists
+fn set_1d(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
+	let arg0 = env.psterms.get_term(&args[0]);
+	let arg2 = env.psterms.get_term(&args[2]);
+
+	let i = if let Term::Integer(i) = arg0{
+		i
+	}else{
+		panic!("set(i, val, list): первый аргумент должен быть целым индексом");
+	};
+
+	let mut list = if let Term::List(l) = arg2{
+		l.clone()
+	}else{
+		panic!("set(i, val, list): третий аргумент должен быть списком");
+	};
+
+	if i < 0 || (i as usize) >= list.len(){
+		panic!("set(i, val, list): индекс {} вне границ (длина списка {})", i, list.len());
+	}
+
+	list[i as usize] = args[1];
+	env.psterms.get_tid(Term::List(list)).unwrap()
+}
+
+// lists
+fn set_at(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
+	match args.len(){
+		3 => set_1d(args, env),
+		4 => {
+			// set(i, j, val, matrix): matrix[i][j] = val  (стандарт: i - строка, j - столбец)
+			let arg_i = env.psterms.get_term(&args[0]);
+			let arg_j = env.psterms.get_term(&args[1]);
+
+			let i = if let Term::Integer(i) = arg_i{
+				i
+			}else{
+				panic!("set(i, j, val, matrix): первый аргумент i должен быть целым индексом строки");
+			};
+			let j = if let Term::Integer(j) = arg_j{
+				j
+			}else{
+				panic!("set(i, j, val, matrix): второй аргумент j должен быть целым индексом столбца");
+			};
+
+			let matrix = env.psterms.get_term(&args[3]);
+			let mut rows = if let Term::List(rows) = matrix{
+				rows.clone()
+			}else{
+				panic!("set(i, j, val, matrix): четвёртый аргумент должен быть списком списков");
+			};
+
+			if i < 0 || (i as usize) >= rows.len(){
+				panic!("set(i, j, val, matrix): индекс строки i={} вне границ (число строк {})", i, rows.len());
+			}
+
+			let row_tid = rows[i as usize];
+			let mut row = if let Term::List(r) = env.psterms.get_term(&row_tid){
+				r.clone()
+			}else{
+				panic!("set(i, j, val, matrix): строка i={} не является списком", i);
+			};
+
+			if j < 0 || (j as usize) >= row.len(){
+				panic!("set(i, j, val, matrix): индекс столбца j={} вне границ (длина строки i={}: {})", j, i, row.len());
+			}
+
+			row[j as usize] = args[2];
+			rows[i as usize] = env.psterms.get_tid(Term::List(row)).unwrap();
+			env.psterms.get_tid(Term::List(rows)).unwrap()
+		},
+		_ => panic!("set: ожидается 3 (set(i, val, list)) или 4 (set(i, j, val, matrix)) аргумента, получено {}", args.len()),
+	}
+}
 
 
 // string, lists
@@ -693,6 +839,8 @@ pub fn init() -> (PSTerms, HashMap<String, SymbolId>){
 		("subseteq".to_string(), (subseteq as IFunction, Position::Infix)),
 		("sort".to_string(), (sortlist as IFunction, Position::Classic)),
 		("dedup".to_string(), (dedup as IFunction, Position::Classic)),
+		("get".to_string(), (get_at as IFunction, Position::Classic)),
+		("set".to_string(), (set_at as IFunction, Position::Classic)),
 		("dist".to_string(), (dist as IFunction, Position::Classic)),
 		// ("&".to_string(), (notequal as IFunction, Position::Infix)),
 	]);
