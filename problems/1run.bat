@@ -11,4 +11,4 @@ if errorlevel 1 (
 )
 
 ".\%DST%" -s general -l 200 -f BlockMovePlanning.pcsf -j > BlockMovePlanning.log.pcsf
-python ../tools/block_move_viewer/viewer.py
+REM python ../tools/block_move_viewer/viewer.py

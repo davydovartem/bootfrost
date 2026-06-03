@@ -269,44 +269,44 @@
 				? R(r, N), Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells)))
 
 	# Продолжение обхода по выбранной стороне
-	!r,x,y,u,v,cells R(r, N), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, L), Free(x, y + 1, 0), or(x != u, y != v), ~
-					Free(x - 1, y, 1) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x - 1, y), AvoidWall(r, L)
-	!r,x,y,u,v,cells R(r, N), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, R), Free(x, y + 1, 0), or(x != u, y != v), ~
-					Free(x + 1, y, 1) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x + 1, y), AvoidWall(r, R)
-	!r,x,y,u,v,cells R(r, E), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, L), Free(x + 1, y, 0), or(x != u, y != v), ~
-					Free(x, y + 1, 1) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x, y + 1), AvoidWall(r, L)
-	!r,x,y,u,v,cells R(r, E), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, R), Free(x + 1, y, 0), or(x != u, y != v), ~
-					Free(x, y - 1, 1) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x, y - 1), AvoidWall(r, R)
-	!r,x,y,u,v,cells R(r, S), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, L), Free(x, y - 1, 0), or(x != u, y != v), ~
-					Free(x + 1, y, 1) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x + 1, y), AvoidWall(r, L)
-	!r,x,y,u,v,cells R(r, S), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, R), Free(x, y - 1, 0), or(x != u, y != v), ~
-					Free(x - 1, y, 1) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x - 1, y), AvoidWall(r, R)
-	!r,x,y,u,v,cells R(r, W), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, L), Free(x - 1, y, 0), or(x != u, y != v), ~
-					Free(x, y - 1, 1) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x, y - 1), AvoidWall(r, L)
-	!r,x,y,u,v,cells R(r, W), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, R), Free(x - 1, y, 0), or(x != u, y != v), ~
-					Free(x, y + 1, 1) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x, y + 1), AvoidWall(r, R)
+	!r,x,y,u,v,cells R(r, N), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, L), get(y + 1, x, cells) == 0, or(x != u, y != v), ~
+					get(y, x - 1, cells) == 1 $ remove_fact(1), remove_fact(2)
+		? Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells)))
+	!r,x,y,u,v,cells R(r, N), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, R), get(y + 1, x, cells) == 0, or(x != u, y != v), ~
+					get(y, x + 1, cells) == 1 $ remove_fact(1), remove_fact(2)
+		? Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells)))
+	!r,x,y,u,v,cells R(r, E), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, L), get(y, x + 1, cells) == 0, or(x != u, y != v), ~
+					get(y + 1, x, cells) == 1 $ remove_fact(1), remove_fact(2)
+		? Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells)))
+	!r,x,y,u,v,cells R(r, E), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, R), get(y, x + 1, cells) == 0, or(x != u, y != v), ~
+					get(y - 1, x, cells) == 1 $ remove_fact(1), remove_fact(2)
+		? Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells)))
+	!r,x,y,u,v,cells R(r, S), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, L), get(y - 1, x, cells) == 0, or(x != u, y != v), ~
+					get(y, x + 1, cells) == 1 $ remove_fact(1), remove_fact(2)
+		? Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells)))
+	!r,x,y,u,v,cells R(r, S), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, R), get(y - 1, x, cells) == 0, or(x != u, y != v), ~
+					get(y, x - 1, cells) == 1 $ remove_fact(1), remove_fact(2)
+		? Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells)))
+	!r,x,y,u,v,cells R(r, W), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, L), get(y, x - 1, cells) == 0, or(x != u, y != v), ~
+					get(y - 1, x, cells) == 1 $ remove_fact(1), remove_fact(2)
+		? Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells)))
+	!r,x,y,u,v,cells R(r, W), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, R), get(y, x - 1, cells) == 0, or(x != u, y != v), ~
+					get(y + 1, x, cells) == 1 $ remove_fact(1), remove_fact(2)
+		? Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells)))
 
 	# Выход из обхода по стене при открытом проходе вперед
-	!r,x,y,u,v,s  R(r, N), Pos(r, x, y), Free(x, y, 0), Free(x, y + 1, 1), AppM(r,u,v), AvoidWall(r, s), ~
+	!r,x,y,u,v,s,cells  R(r, N), Pos(r, x, y), Cells(cells), get(y + 1, x, cells) == 1, AppM(r,u,v), AvoidWall(r, s), ~
 				dist(x, y, u, v) >f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(5)
-		? Pos(r, x, y + 1), Free(x, y, 1), Free(x, y + 1, 0)
-	!r,x,y,u,v,s  R(r, E), Pos(r, x, y), Free(x, y, 0), Free(x + 1, y, 1), AppM(r,u,v), AvoidWall(r, s), ~
+		? Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells)))
+	!r,x,y,u,v,s,cells  R(r, E), Pos(r, x, y), Cells(cells), get(y, x + 1, cells) == 1, AppM(r,u,v), AvoidWall(r, s), ~
 				dist(x, y, u, v) >f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(5)
-		? Pos(r, x + 1, y), Free(x, y, 1), Free(x + 1, y, 0)
-	!r,x,y,u,v,s  R(r, S), Pos(r, x, y), Free(x, y, 0), Free(x, y - 1, 1), AppM(r,u,v), AvoidWall(r, s), ~
+		? Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells)))
+	!r,x,y,u,v,s,cells  R(r, S), Pos(r, x, y), Cells(cells), get(y - 1, x, cells) == 1, AppM(r,u,v), AvoidWall(r, s), ~
 				dist(x, y, u, v) >f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(5)
-		? Pos(r, x, y - 1), Free(x, y, 1), Free(x, y - 1, 0)
-	!r,x,y,u,v,s  R(r, W), Pos(r, x, y), Free(x, y, 0), Free(x - 1, y, 1), AppM(r,u,v), AvoidWall(r, s), ~
+		? Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells)))
+	!r,x,y,u,v,s,cells  R(r, W), Pos(r, x, y), Cells(cells), get(y, x - 1, cells) == 1, AppM(r,u,v), AvoidWall(r, s), ~
 				dist(x, y, u, v) >f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(5)
-		? Pos(r, x - 1, y), Free(x, y, 1), Free(x - 1, y, 0)
+		? Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells)))
 
 	#--------4
 	#Проверка выполнения задания по подходу к блоку для передвижения его в паре. Если робот находится рядом с блоком и готов к его перемещению, то ему необходимо повернуть на север.
@@ -316,13 +316,11 @@
 	#--------5
 	#Если два разных робота готовы толкать блок, они одновременно переходят в режим движения.
 	#33
-	!b,x,y,r1,r2,x1,y1,x2,y2 Ready(r1, 1), Ready(r2, 1), Pos(r1, x1, y1), Pos(r2, x2, y2), Pos(b, x, y), ~
-				Free(x1, y1 + 2, 1), Free(x2, y2 + 2, 1), Free(x1, y1, 0), Free(x2, y2, 0), B(b), ~
-				y1 == y2, or(x1 == x, x2 == x), or(x1 == x + 1, x2 == x + 1), r1 != r2 $ remove_fact(2), remove_fact(3), remove_fact(4), remove_fact(5), remove_fact(6), remove_fact(7), remove_fact(8)
+	!b,x,y,r1,r2,x1,y1,x2,y2,cells Ready(r1, 1), Ready(r2, 1), Pos(r1, x1, y1), Pos(r2, x2, y2), Pos(b, x, y), Cells(cells), B(b), ~
+				get(y1 + 2, x1, cells) == 0, get(y2 + 2, x2, cells) == 0, y1 == y2, r1 != r2, ~
+				or(x1 == x, x2 == x), or(x1 == x + 1, x2 == x + 1) $ remove_fact(2), remove_fact(3), remove_fact(4), remove_fact(5)
 		? Pos(r1, x1, y1 + 1), Pos(r2, x2, y2 + 1), Move(r1, b), Move(r2, b), Pos(b, x, y + 1), ~
-			Free(x1, y1 + 2, 0), Free(x2, y2 + 2, 0), ~
-			Free(x, y + 1, 0), Free(x + 1, y + 1, 0), ~
-			Free(x1, y1, 1), Free(x2, y2, 1)
+			Cells(set(y1, x1, 1, set(y2, x2, 1, set(y + 1, x, 0, set(y + 1, x + 1, 0, set(y1 + 2, x1, 0, set(y2 + 2, x2, 0, cells)))))))
 	#--------6
 	#Проверка достижения края сцены роботами, перемещающими блок
 	#34
@@ -371,27 +369,25 @@
 	#--------9
 	#Последние правила соответствуют перемещению робота, толкающего блок по горизонтали
 	#42
-	!b,x,y,r,xr,yr Ready(r, 2), R(r, E), Pos(r, xr, yr), B(b), Pos(b, x, y), Free(x + 2, y, 1), Free(xr, yr, 0), ~
-				IsBlockOnPosition(b, 0), yr == y $ remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6)
-		? Pos(r, xr + 1, yr), Pos(b, x + 1, y), Free(x + 2, y, 0), Free(xr, yr, 1)
+	!b,x,y,r,xr,yr,cells Ready(r, 2), R(r, E), Pos(r, xr, yr), B(b), Pos(b, x, y), Cells(cells), get(y, x + 2, cells) == 1, ~
+				IsBlockOnPosition(b, 0), yr == y $ remove_fact(2), remove_fact(4), remove_fact(5)
+		? Pos(r, xr + 1, yr), Pos(b, x + 1, y), Cells(set(y, x + 2, 0, set(yr, xr, 1, cells)))
 			#Проверка достижения цели по горизонтали
 			#Добавляем инфу о том, что последний ряд клеток занят
-			! Ready(r, 2), B(b), Pos(b, x + 1, y), x + 1 == 4, ~
-					Free(1, y, 1), Free(2, y, 1), Free(6, y, 1), Free(7, y, 1), Free(8, y, 1), ~
-					IsBlockOnPosition(b, 0), IsRobotSingle(r, 1) $ remove_fact(0), remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6), remove_fact(7), remove_fact(8), remove_fact(9), remove_fact(10), answer_once()
+			!cells Ready(r, 2), B(b), Pos(b, x + 1, y), x + 1 == 4, Cells(cells), ~
+					IsBlockOnPosition(b, 0), IsRobotSingle(r, 1) $ remove_fact(0), remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6), answer_once()
 				? IsBlockOnPosition(b, 1), BlockOnPosition(b, x + 1, y), ~
-					Free(1, y, 0), Free(2, y, 0), Free(6, y, 0), Free(7, y, 0), Free(8, y, 0)
+					Cells(set(y, 1, 0, set(y, 2, 0, set(y, 6, 0, set(y, 7, 0, set(y, 8, 0, cells))))))
 	#43
-	!b,x,y,r,xr,yr Ready(r, 2), R(r, W), Pos(r, xr, yr), B(b), Pos(b, x, y), Free(x - 1, y, 1), Free(xr, yr, 0), ~
-				IsBlockOnPosition(b, 0), yr == y $ remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6)
-		? Pos(r, xr - 1, yr), Pos(b, x - 1, y), Free(x - 1, y, 0), Free(xr, yr, 1)
+	!b,x,y,r,xr,yr,cells Ready(r, 2), R(r, W), Pos(r, xr, yr), B(b), Pos(b, x, y), Cells(cells), get(y, x - 1, cells) == 1, ~
+				IsBlockOnPosition(b, 0), yr == y $ remove_fact(2), remove_fact(4), remove_fact(5)
+		? Pos(r, xr - 1, yr), Pos(b, x - 1, y), Cells(set(y, x - 1, 0, set(yr, xr, 1, cells)))
 			#Проверка достижения цели по горизонтали
 			#Добавляем инфу о том, что последний ряд клеток занят
-			!  Ready(r, 2), B(b), Pos(b, x - 1, y), x - 1 == 4, ~
-					Free(1, y, 1), Free(2, y, 1), Free(3, y, 1), Free(7, y, 1), Free(8, y, 1), ~
-					IsBlockOnPosition(b, 0), IsRobotSingle(r, 1) $ remove_fact(0), remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6), remove_fact(7), remove_fact(8), remove_fact(9), remove_fact(10), answer_once()
+			!cells Ready(r, 2), B(b), Pos(b, x - 1, y), x - 1 == 4, Cells(cells), ~
+					IsBlockOnPosition(b, 0), IsRobotSingle(r, 1) $ remove_fact(0), remove_fact(2), remove_fact(4), remove_fact(5), remove_fact(6), answer_once()
 				? IsBlockOnPosition(b, 1), BlockOnPosition(b, x - 1, y), ~
-					Free(1, y, 0), Free(2, y, 0), Free(3, y, 0), Free(7, y, 0), Free(8, y, 0)
+					Cells(set(y, 1, 0, set(y, 2, 0, set(y, 3, 0, set(y, 7, 0, set(y, 8, 0, cells))))))
 	#Goal questions
 	#44
 	! b1, b2, x1, x2, y1, y2 BlockOnPosition(b1, x1, y1), BlockOnPosition(b2, x2, y2), b1 != b2

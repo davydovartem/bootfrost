@@ -551,15 +551,47 @@ fn remove_fact(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 		panic!("");
 	};
 
-	let b = if let LogItem::Matching{batom_id: b, ..} = env.answer.log[i as usize]{
-		b
+	if i < 0 || (i as usize) >= env.answer.log.len(){
+		// печатаем все элементы лога, чтобы было видно структуру
+		let mut log_dump = String::new();
+		for (idx, item) in env.answer.log.iter().enumerate(){
+			match item{
+				LogItem::Matching{batom_id, qatom_i, ..} => {
+					log_dump.push_str(&format!("  log[{}] = Matching (qatom_i={}, batom_id={})\n", idx, qatom_i, batom_id.0));
+				},
+				LogItem::Interpretation{qatom_i} => {
+					log_dump.push_str(&format!("  log[{}] = Interpretation (qatom_i={})\n", idx, qatom_i));
+				},
+			}
+		}
+		panic!(
+			"remove_fact: индекс {} вне границ (длина env.answer.log = {}).\n\
+			 Содержимое env.answer.log:\n{}",
+			i, env.answer.log.len(), log_dump
+		);
+	}
+
+	let log_item = &env.answer.log[i as usize];
+
+	let b = if let LogItem::Matching{batom_id: b, ..} = log_item{
+		*b
 	}else{
-		panic!("");
+		match log_item{
+			LogItem::Matching{..} => unreachable!(),
+			LogItem::Interpretation{qatom_i} => {
+				panic!(
+					"remove_fact: на индексе {} в env.answer.log лежит Interpretation (qatom_i={}), \n
+					 а не Matching. remove_fact умеет удалять только Matching-атомы (подобранные из базы), \n
+					 но не интерпретации IFunctor (например, get/set/dist).\n",
+					i, qatom_i
+				);
+			},
+		}
 	};
 
 	env.attributes.set_attribute(KeyObject::BaseAtom(b), AttributeName("deleted".to_string()), AttributeValue("true".to_string()), env.bid);
 
-	env.psterms.get_tid(Term::Bool(true)).unwrap()	
+	env.psterms.get_tid(Term::Bool(true)).unwrap()
 }
 
 fn answer_subquestion(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
