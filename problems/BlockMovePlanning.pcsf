@@ -110,22 +110,22 @@
 	# This part of the rules corresponds to the movement of the robots in the oriented direction.
 	#12
 	!r,x,y,u,v,cells  R(r, N), Pos(r, x, y), Cells(cells), AppM(r,u,v), ~
-				get(y, x, cells) == 0, get(y + 1, x, cells) == 1, ~
+				get(y + 1, x, cells) == 1, ~
 				dist(x, y, u, v) >f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(2)
 		? Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells)))
 	#13
 	!r,x,y,u,v,cells  R(r, E), Pos(r, x, y), Cells(cells), AppM(r,u,v), ~
-				get(y, x, cells) == 0, get(y, x + 1, cells) == 1, ~
+				get(y, x + 1, cells) == 1, ~
 				dist(x, y, u, v) >f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(2)
 		? Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells)))
 	#14
 	!r,x,y,u,v,cells  R(r, S), Pos(r, x, y), Cells(cells), AppM(r,u,v), ~
-				get(y, x, cells) == 0, get(y - 1, x, cells) == 1, ~
+				get(y - 1, x, cells) == 1, ~
 				dist(x, y, u, v) >f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x, y - 1), Cells(set(y, x, 1, set(y, x - 1, 0, cells)))
+		? Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells)))
 	#15
 	!r,x,y,u,v,cells  R(r, W), Pos(r, x, y), Cells(cells), AppM(r,u,v), ~
-				get(y, x, cells) == 0, get(y, x - 1, cells) == 1, ~
+				get(y, x - 1, cells) == 1, ~
 				dist(x, y, u, v) >f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(2)
 		? Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells)))
 	#--------3.5
@@ -244,7 +244,7 @@
 		? Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells))), AvoidWall(r, R)
 	# If the cell "good left" is occupied, then leap back
 	#30
-	!r,x,y,u,v,cells  R(r, W), Pos(r, x, y), Cells(cells), get(y, x - 1, cells) == 0, or(x != u, y != v), ~
+	!r,x,y,u,v,cells  R(r, W), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y, x - 1, cells) == 0, or(x != u, y != v), ~
 					get(y - 1, x, cells) == 0, dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(2), answer_subquestion(0), answer_subquestion(1)
 		? Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells))), Avoid(r)
 			!x,y,cells R(r, W), Pos(r, x, y), Cells(cells), get(y - 1, x, cells) == 1, Avoid(r), ~
@@ -293,16 +293,16 @@
 
 	# Exit the bypassing on the chosen side when the path is open
 	!r,x,y,u,v,s,cells  R(r, N), Pos(r, x, y), Cells(cells), get(y + 1, x, cells) == 1, AppM(r,u,v), AvoidWall(r, s), ~
-				dist(x, y, u, v) >f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(5)
+				dist(x, y, u, v) >f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(2), remove_fact(5)
 		? Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells)))
 	!r,x,y,u,v,s,cells  R(r, E), Pos(r, x, y), Cells(cells), get(y, x + 1, cells) == 1, AppM(r,u,v), AvoidWall(r, s), ~
-				dist(x, y, u, v) >f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(5)
+				dist(x, y, u, v) >f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(2), remove_fact(5)
 		? Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells)))
 	!r,x,y,u,v,s,cells  R(r, S), Pos(r, x, y), Cells(cells), get(y - 1, x, cells) == 1, AppM(r,u,v), AvoidWall(r, s), ~
-				dist(x, y, u, v) >f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(5)
+				dist(x, y, u, v) >f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(2), remove_fact(5)
 		? Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells)))
 	!r,x,y,u,v,s,cells  R(r, W), Pos(r, x, y), Cells(cells), get(y, x - 1, cells) == 1, AppM(r,u,v), AvoidWall(r, s), ~
-				dist(x, y, u, v) >f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(2), remove_fact(3), remove_fact(5)
+				dist(x, y, u, v) >f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(2), remove_fact(5)
 		? Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells)))
 
 	#--------4
@@ -314,7 +314,7 @@
 	# If two distinct robots are ready to move the block, they will move simultaneously.
 	#33
 	!b,x,y,r1,r2,x1,y1,x2,y2,cells Ready(r1, 1), Ready(r2, 1), Pos(r1, x1, y1), Pos(r2, x2, y2), Pos(b, x, y), Cells(cells), B(b), ~
-				get(y1 + 2, x1, cells) == 0, get(y2 + 2, x2, cells) == 0, y1 == y2, r1 != r2, ~
+				get(y1 + 2, x1, cells) == 1, get(y2 + 2, x2, cells) == 1, y1 == y2, r1 != r2, ~
 				or(x1 == x, x2 == x), or(x1 == x + 1, x2 == x + 1) $ remove_fact(2), remove_fact(3), remove_fact(4), remove_fact(5)
 		? Pos(r1, x1, y1 + 1), Pos(r2, x2, y2 + 1), Move(r1, b), Move(r2, b), Pos(b, x, y + 1), ~
 			Cells(set(y1, x1, 1, set(y2, x2, 1, set(y + 1, x, 0, set(y + 1, x + 1, 0, set(y1 + 2, x1, 0, set(y2 + 2, x2, 0, cells)))))))
@@ -327,10 +327,10 @@
 		? BlockMovedToEdge(b), IsRobotInPair(r1, 0), IsRobotInPair(r2, 0)
 	#another check if one of the blocks is already on place
 	#35
-	!r1,r2,b,x1,x2,y,h Move(r1, b), Ready(r1, 1), Pos(r1, x1, y), Move(r2, b), Ready(r2, 1), Pos(r2, x2, y), ~
+	!r1,r2,b,b2,x1,x2,y,h Move(r1, b), Ready(r1, 1), Pos(r1, x1, y), Move(r2, b), Ready(r2, 1), Pos(r2, x2, y), ~
 				IsRobotInPair(r1, 1), IsRobotInPair(r2, 1), ~
 				r1 != r2, or(x1 == x2 + 1, x2 == x1 + 1), ~
-				H(h), BlockMovedToEdge(B1), y == h - 2 $ remove_fact(0), remove_fact(1), remove_fact(3), remove_fact(4), remove_fact(6), remove_fact(7)
+				H(h), BlockMovedToEdge(b2), b2 != b, y == h - 2 $ remove_fact(0), remove_fact(1), remove_fact(3), remove_fact(4), remove_fact(6), remove_fact(7)
 		? BlockMovedToEdge(b), IsRobotInPair(r1, 0), IsRobotInPair(r2, 0)
 	#--------7
 	#The rules for the appointment of the single robot to move to the edge (flank) of the block to move it horizontally.

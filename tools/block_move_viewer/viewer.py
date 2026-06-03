@@ -50,7 +50,7 @@ LINE_HEIGHT = 22
 
 ROBOT_IDS = {"R1", "R2", "R3"}
 BLOCK_IDS = {"B1", "B2"}
-HIDDEN_DERIVED_ATOM_NAMES = {"Free", "Pos", "R"}
+HIDDEN_DERIVED_ATOM_NAMES = {"Free", "Pos", "R", "Cells"}
 
 
 def term_to_text(term: dict[str, Any]) -> str:
@@ -65,12 +65,32 @@ def atom_to_text(atom: dict[str, Any]) -> str:
     return f"{atom.get('name', '')}(" + ", ".join(term_to_text(arg) for arg in atom.get("args", [])) + ")"
 
 
+SUMMARY_ATOM_NAMES = {"Cells", "Free"}
+
+
+def atom_to_summary(atom: dict[str, Any]) -> str:
+    name = str(atom.get("name", ""))
+    if name in SUMMARY_ATOM_NAMES:
+        return name
+    return atom_to_text(atom)
+
+
 def is_int_text(value: str) -> bool:
     if not value:
         return False
     if value.startswith("-"):
         return value[1:].isdigit()
     return value.isdigit()
+
+
+def parse_cells_value(term: dict[str, Any]) -> int | list:
+    name = str(term.get("name", ""))
+    args = term.get("args") or []
+    if name == "list":
+        return [parse_cells_value(arg) for arg in args]
+    if is_int_text(name):
+        return int(name)
+    raise ValueError(f"element Cells: expected list or int, got {name}")
 
 
 def atom_args(atom: dict[str, Any]) -> list[str]:
@@ -130,7 +150,7 @@ def visible_derived_base_atoms(active_atoms: list[dict[str, Any]], initial_keys:
     derived_atoms: list[str] = []
     for atom in active_atoms:
         atom_name = str(atom.get("name", ""))
-        atom_text = atom_to_text(atom)
+        atom_text = atom_to_summary(atom)
         if atom_name in HIDDEN_DERIVED_ATOM_NAMES:
             continue
         if atom_text in initial_keys:
@@ -231,6 +251,37 @@ def build_state(active_atoms: list[dict[str, Any]], *, default_width: int | None
                 free_collisions.add(key)
             else:
                 free_cells[key] = value
+        elif name == "Cells" and len(args) == 1:
+            term_args = atom.get("args") or []
+            if len(term_args) != 1:
+                raise ValueError(f"Cells: expected 1 argument (list), got {len(term_args)}")
+            try:
+                cells_value = parse_cells_value(term_args[0])
+            except ValueError as exc:
+                raise ValueError(f"Cells: failed to parse value: {exc}") from exc
+            if not isinstance(cells_value, list) or not cells_value:
+                raise ValueError("Cells: expected non-empty list")
+            new_height = len(cells_value)
+            new_width = 0
+            for y, row in enumerate(cells_value):
+                if not isinstance(row, list):
+                    raise ValueError(f"Cells: row y={y} is not a list")
+                if len(row) > new_width:
+                    new_width = len(row)
+                for x, value in enumerate(row):
+                    if not isinstance(value, int):
+                        raise ValueError(
+                            f"Cells: cell value must be int, "
+                            f"got {type(value).__name__}: {value!r}"
+                        )
+                    key = (x, y)
+                    existing = free_cells.get(key)
+                    if existing is not None and existing != value:
+                        free_collisions.add(key)
+                    else:
+                        free_cells[key] = value
+            width = new_width
+            height = new_height
 
     if width <= 0 and default_width is not None:
         width = default_width
@@ -240,8 +291,8 @@ def build_state(active_atoms: list[dict[str, Any]], *, default_width: int | None
     if width <= 0 or height <= 0:
         raise ValueError("Could not infer scene dimensions from active atoms")
 
-    for x in range(1, width + 1):
-        for y in range(1, height + 1):
+    for x in range(width):
+        for y in range(height):
             if (x, y) not in free_cells:
                 free_missing.add((x, y))
 
@@ -265,7 +316,7 @@ def load_frames(log_path: Path) -> tuple[list[Frame], set[tuple[int, int]]]:
     frames: list[Frame] = []
 
     initial_state = build_state(initial_atoms)
-    initial_keys = {atom_to_text(atom) for atom in initial_atoms}
+    initial_keys = {atom_to_summary(atom) for atom in initial_atoms}
     frames.append(
         Frame(
             index=0,
@@ -295,7 +346,7 @@ def load_frames(log_path: Path) -> tuple[list[Frame], set[tuple[int, int]]]:
             removed_atoms: list[str] = []
         else:
             active_atoms = active_atoms_from_base(base_entries)
-            active_keys = {atom_to_text(atom) for atom in active_atoms}
+            active_keys = {atom_to_summary(atom) for atom in active_atoms}
             removed_atoms = sorted(previous_keys - active_keys)
             previous_keys = active_keys
             previous_atoms = active_atoms
@@ -370,7 +421,7 @@ class SceneRenderer:
         scene_width = MARGIN_LEFT + frame.state.width * CELL_SIZE + MARGIN_RIGHT
         scene_height = MARGIN_TOP + frame.state.height * CELL_SIZE + MARGIN_BOTTOM
         total_width = scene_width + PANEL_GAP + PANEL_WIDTH
-        total_height = max(scene_height, 860, self._estimate_full_height(frame))
+        total_height = max(scene_height, 900, self._estimate_full_height(frame))
 
         image = Image.new("RGBA", (total_width, total_height), "#eef2f7")
         draw = ImageDraw.Draw(image)
@@ -391,30 +442,30 @@ class SceneRenderer:
         draw.rounded_rectangle((18, 18, scene_width - 18, scene_height - 18), radius=20, fill=PANEL_BG, outline=PANEL_BORDER, width=2)
         draw.text((MARGIN_LEFT, 20), self._scene_title(frame), fill=TEXT, font=self.title_font)
 
-        for x in range(1, frame.state.width + 1):
-            for y in range(1, frame.state.height + 1):
+        for x in range(frame.state.width):
+            for y in range(frame.state.height):
                 cell = self._cell_box(x, y, frame.state.height)
                 free_value = frame.state.free_cells.get((x, y), 0)
                 fill = FREE_FILL if free_value == 1 else OCCUPIED_FILL
                 draw.rectangle(cell, fill=fill, outline=GRID_LINE, width=1)
 
         for x, y in self.goal_cells:
-            if 1 <= x <= frame.state.width and 1 <= y <= frame.state.height:
+            if 0 <= x < frame.state.width and 0 <= y < frame.state.height:
                 draw.rounded_rectangle(self._cell_box(x, y, frame.state.height), radius=8, fill=TARGET_FILL, outline=TARGET_OUTLINE, width=2)
 
         for x, y in frame.state.free_missing:
-            if 1 <= x <= frame.state.width and 1 <= y <= frame.state.height:
+            if 0 <= x < frame.state.width and 0 <= y < frame.state.height:
                 draw.rectangle(self._cell_box(x, y, frame.state.height), fill=MISSING_FREE_FILL, outline=MISSING_FREE_OUTLINE, width=3)
 
         for x, y in frame.state.free_collisions:
-            if 1 <= x <= frame.state.width and 1 <= y <= frame.state.height:
+            if 0 <= x < frame.state.width and 0 <= y < frame.state.height:
                 draw.rectangle(self._cell_box(x, y, frame.state.height), fill=COLLISION_FILL, outline=COLLISION_OUTLINE, width=3)
 
-        for x in range(1, frame.state.width + 1):
-            cell = self._cell_box(x, 1, frame.state.height)
+        for x in range(frame.state.width):
+            cell = self._cell_box(x, 0, frame.state.height)
             draw.text((cell[0] + CELL_SIZE / 2 - 5, scene_height - MARGIN_BOTTOM + 12), str(x), fill=MUTED, font=self.small_font)
-        for y in range(1, frame.state.height + 1):
-            cell = self._cell_box(1, y, frame.state.height)
+        for y in range(frame.state.height):
+            cell = self._cell_box(0, y, frame.state.height)
             draw.text((20, cell[1] + CELL_SIZE / 2 - 9), str(y), fill=MUTED, font=self.small_font)
 
         for block in frame.state.blocks:
@@ -436,8 +487,8 @@ class SceneRenderer:
             y = self._draw_wrapped(draw, panel_left + 20, y + 10, panel_right - 20, f"Answer: {frame.answer}", self.small_font, MUTED)
 
         panel_items = [
-            ("Added atoms", [atom_to_text(atom) for atom in frame.added_atoms], ADDED_HIGHLIGHT),
-            ("Used atoms", [atom_to_text(atom) for atom in frame.used_atoms], USED_HIGHLIGHT),
+            ("Added atoms", [atom_to_summary(atom) for atom in frame.added_atoms], ADDED_HIGHLIGHT),
+            ("Used atoms", [atom_to_summary(atom) for atom in frame.used_atoms], USED_HIGHLIGHT),
             ("Removed from active base", frame.removed_atoms, "#dc2626"),
             ("Scene summary", self._scene_summary(frame.state), TEXT),
         ]
@@ -509,8 +560,8 @@ class SceneRenderer:
         return y + LINE_HEIGHT
 
     def _cell_box(self, x: int, y: int, height: int) -> tuple[int, int, int, int]:
-        left = MARGIN_LEFT + (x - 1) * CELL_SIZE
-        top = MARGIN_TOP + (height - y) * CELL_SIZE
+        left = MARGIN_LEFT + x * CELL_SIZE
+        top = MARGIN_TOP + (height - 1 - y) * CELL_SIZE
         return (left, top, left + CELL_SIZE, top + CELL_SIZE)
 
     def _entity_highlight(self, entity: str, frame: Frame) -> str | None:
@@ -588,7 +639,7 @@ class ViewerApp:
 
         self.root.title("Block Move Planning Viewer")
         self.root.geometry("1200x760")
-        self.root.minsize(1200, 760)
+        self.root.minsize(1200, 860)
 
         outer = ttk.Frame(root, padding=10)
         outer.pack(fill=tk.BOTH, expand=True)
@@ -750,10 +801,10 @@ class RightPanel(ttk.Frame):
         two_col.columnconfigure(0, weight=1, uniform="right_cols")
         two_col.columnconfigure(1, weight=1, uniform="right_cols")
 
-        self._section(two_col, 0, 0, "Added atoms", [atom_to_text(a) for a in frame.added_atoms], ADDED_HIGHLIGHT)
+        self._section(two_col, 0, 0, "Added atoms", [atom_to_summary(a) for a in frame.added_atoms], ADDED_HIGHLIGHT)
         self._section(two_col, 0, 1, "Removed from active base", frame.removed_atoms, "#dc2626")
 
-        self._section(self, 2, 0, "Used atoms", [atom_to_text(a) for a in frame.used_atoms], USED_HIGHLIGHT, padx=12)
+        self._section(self, 2, 0, "Used atoms", [atom_to_summary(a) for a in frame.used_atoms], USED_HIGHLIGHT, padx=12)
         self._section(self, 3, 0, "Derived base atoms", frame.derived_base_atoms, ADDED_HIGHLIGHT, padx=12)
         self._section(self, 4, 0, "Scene summary", scene_summary(frame.state), TEXT, padx=12)
 
