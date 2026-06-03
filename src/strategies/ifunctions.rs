@@ -326,17 +326,17 @@ fn get_1d(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 	let i = if let Term::Integer(i) = arg0{
 		i
 	}else{
-		panic!("get(i, list): первый аргумент должен быть целым индексом");
+		panic!("get(i, list): the first argument must be an integer index");
 	};
 
 	let list = if let Term::List(l) = arg1{
 		l
 	}else{
-		panic!("get(i, list): второй аргумент должен быть списком");
+		panic!("get(i, list): the second argument must be a list");
 	};
 
 	if i < 0 || (i as usize) >= list.len(){
-		panic!("get(i, list): индекс {} вне границ (длина списка {})", i, list.len());
+		panic!("get(i, list): index {} is out of bounds (list length {})", i, list.len());
 	}
 
 	list[i as usize]
@@ -347,23 +347,23 @@ fn get_at(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 	match args.len(){
 		2 => get_1d(args, env),
 		3 => {
-			// get(i, j, matrix) == matrix[i][j]  (стандарт: i - строка, j - столбец)
+			// get(i, j, matrix) == matrix[i][j]  (i - row, j - column)
 			let arg_i = env.psterms.get_term(&args[0]);
 			let i = if let Term::Integer(i) = arg_i{
 				i
 			}else{
-				panic!("get(i, j, matrix): первый аргумент i должен быть целым индексом строки");
+				panic!("get(i, j, matrix): the first argument must be an integer index of the row");
 			};
 
 			let matrix = env.psterms.get_term(&args[2]);
 			let rows = if let Term::List(rows) = matrix{
 				rows
 			}else{
-				panic!("get(i, j, matrix): третий аргумент должен быть списком списков");
+				panic!("get(i, j, matrix): the third argument must be a list of lists");
 			};
 
 			if i < 0 || (i as usize) >= rows.len(){
-				panic!("get(i, j, matrix): индекс строки i={} вне границ (число строк {})", i, rows.len());
+				panic!("get(i, j, matrix): index {} is out of bounds (rows count {})", i, rows.len());
 			}
 
 			let row_tid = rows[i as usize];
@@ -371,22 +371,22 @@ fn get_at(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 			let row = if let Term::List(r) = row_term{
 				r
 			}else{
-				panic!("get(i, j, matrix): строка i={} не является списком", i);
+				panic!("get(i, j, matrix): row {} is not a list", i);
 			};
 
 			let j = if let Term::Integer(j) = env.psterms.get_term(&args[1]){
 				j
 			}else{
-				panic!("get(i, j, matrix): второй аргумент j должен быть целым индексом столбца");
+				panic!("get(i, j, matrix): the second argument must be an integer index of the column");
 			};
 
 			if j < 0 || (j as usize) >= row.len(){
-				panic!("get(i, j, matrix): индекс столбца j={} вне границ (длина строки i={}: {})", j, i, row.len());
+				panic!("get(i, j, matrix): index {} is out of bounds (row length {})", j, row.len());
 			}
 
 			row[j as usize]
 		},
-		_ => panic!("get: ожидается 2 (get(i, list)) или 3 (get(i, j, matrix)) аргумента, получено {}", args.len()),
+		_ => panic!("get: expected 2 (get(i, list)) or 3 (get(i, j, matrix)) arguments, got {}", args.len()),
 	}
 }
 
@@ -398,17 +398,17 @@ fn set_1d(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 	let i = if let Term::Integer(i) = arg0{
 		i
 	}else{
-		panic!("set(i, val, list): первый аргумент должен быть целым индексом");
+		panic!("set(i, val, list): the first argument must be an integer index");
 	};
 
 	let mut list = if let Term::List(l) = arg2{
 		l.clone()
 	}else{
-		panic!("set(i, val, list): третий аргумент должен быть списком");
+		panic!("set(i, val, list): the third argument must be a list");
 	};
 
 	if i < 0 || (i as usize) >= list.len(){
-		panic!("set(i, val, list): индекс {} вне границ (длина списка {})", i, list.len());
+		panic!("set(i, val, list): index {} is out of bounds (list length {})", i, list.len());
 	}
 
 	list[i as usize] = args[1];
@@ -420,48 +420,48 @@ fn set_at(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 	match args.len(){
 		3 => set_1d(args, env),
 		4 => {
-			// set(i, j, val, matrix): matrix[i][j] = val  (стандарт: i - строка, j - столбец)
+			// set(i, j, val, matrix): matrix[i][j] = val  (i - row, j - column)
 			let arg_i = env.psterms.get_term(&args[0]);
 			let arg_j = env.psterms.get_term(&args[1]);
 
 			let i = if let Term::Integer(i) = arg_i{
 				i
 			}else{
-				panic!("set(i, j, val, matrix): первый аргумент i должен быть целым индексом строки");
+				panic!("set(i, j, val, matrix): the first argument must be an integer index of the row");
 			};
 			let j = if let Term::Integer(j) = arg_j{
 				j
 			}else{
-				panic!("set(i, j, val, matrix): второй аргумент j должен быть целым индексом столбца");
+				panic!("set(i, j, val, matrix): the second argument must be an integer index of the column");
 			};
 
 			let matrix = env.psterms.get_term(&args[3]);
 			let mut rows = if let Term::List(rows) = matrix{
 				rows.clone()
 			}else{
-				panic!("set(i, j, val, matrix): четвёртый аргумент должен быть списком списков");
+				panic!("set(i, j, val, matrix): the third argument must be a list of lists");
 			};
 
 			if i < 0 || (i as usize) >= rows.len(){
-				panic!("set(i, j, val, matrix): индекс строки i={} вне границ (число строк {})", i, rows.len());
+				panic!("set(i, j, val, matrix): index {} is out of bounds (rows count {})", i, rows.len());
 			}
 
 			let row_tid = rows[i as usize];
 			let mut row = if let Term::List(r) = env.psterms.get_term(&row_tid){
 				r.clone()
 			}else{
-				panic!("set(i, j, val, matrix): строка i={} не является списком", i);
+				panic!("set(i, j, val, matrix): row i={} is not a list", i);
 			};
 
 			if j < 0 || (j as usize) >= row.len(){
-				panic!("set(i, j, val, matrix): индекс столбца j={} вне границ (длина строки i={}: {})", j, i, row.len());
+				panic!("set(i, j, val, matrix): column index j={} is out of bounds (row {} length: {})", j, i, row.len());
 			}
 
 			row[j as usize] = args[2];
 			rows[i as usize] = env.psterms.get_tid(Term::List(row)).unwrap();
 			env.psterms.get_tid(Term::List(rows)).unwrap()
 		},
-		_ => panic!("set: ожидается 3 (set(i, val, list)) или 4 (set(i, j, val, matrix)) аргумента, получено {}", args.len()),
+		_ => panic!("set: expected 3 (set(i, val, list)) or 4 (set(i, j, val, matrix)) arguments, got {}", args.len()),
 	}
 }
 
@@ -552,7 +552,7 @@ fn remove_fact(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 	};
 
 	if i < 0 || (i as usize) >= env.answer.log.len(){
-		// печатаем все элементы лога, чтобы было видно структуру
+		// print all log items to show the structure
 		let mut log_dump = String::new();
 		for (idx, item) in env.answer.log.iter().enumerate(){
 			match item{
@@ -565,8 +565,8 @@ fn remove_fact(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 			}
 		}
 		panic!(
-			"remove_fact: индекс {} вне границ (длина env.answer.log = {}).\n\
-			 Содержимое env.answer.log:\n{}",
+			"remove_fact: index {} is out of bounds (length of env.answer.log = {}).\n\
+			 Content of env.answer.log:\n{}",
 			i, env.answer.log.len(), log_dump
 		);
 	}
@@ -580,9 +580,9 @@ fn remove_fact(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 			LogItem::Matching{..} => unreachable!(),
 			LogItem::Interpretation{qatom_i} => {
 				panic!(
-					"remove_fact: на индексе {} в env.answer.log лежит Interpretation (qatom_i={}), \n
-					 а не Matching. remove_fact умеет удалять только Matching-атомы (подобранные из базы), \n
-					 но не интерпретации IFunctor (например, get/set/dist).\n",
+					"remove_fact: on index {} in env.answer.log is Interpretation (qatom_i={}), \n
+					 but not Matching. remove_fact can only delete Matching-atoms (corresponding to the base), \n
+					 but not IFunctor (e.g., get/set/dist).\n",
 					i, qatom_i
 				);
 			},
@@ -783,7 +783,7 @@ fn or_bool(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 
 fn dist(args: &Vec<TermId>, env: &mut PEnv) -> TermId {
     if args.len() != 4 {
-        panic!("Функция dist требует ровно 4 аргумента: x0, y0, x1, y1");
+        panic!("dist expects exactly 4 arguments: x0, y0, x1, y1");
     }
 
     let arg0 = env.psterms.get_term(&args[0]);
@@ -817,7 +817,7 @@ fn dist(args: &Vec<TermId>, env: &mut PEnv) -> TermId {
             (x0, y0 as f64, x1 as f64, y1)
         },
         _ => {
-            panic!("Все аргументы функции dist должны быть числами (целыми или вещественными)");
+            panic!("dist arguments must be numbers (integers or floats)");
         }
     };
 

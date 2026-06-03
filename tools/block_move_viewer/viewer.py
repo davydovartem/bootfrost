@@ -270,7 +270,7 @@ def load_frames(log_path: Path) -> tuple[list[Frame], set[tuple[int, int]]]:
         Frame(
             index=0,
             step_number=None,
-            label="Старт",
+            label="Start",
             answer="Initial base from formula.children[0].atoms_list",
             question=None,
             added_atoms=[],
@@ -313,7 +313,7 @@ def load_frames(log_path: Path) -> tuple[list[Frame], set[tuple[int, int]]]:
             Frame(
                 index=offset,
                 step_number=step_number_int,
-                label=f"Шаг {step_number_int}",
+                label=f"Step {step_number_int}",
                 answer=str(step.get("answer", "")),
                 question=step.get("question"),
                 added_atoms=added_atoms,
@@ -471,7 +471,7 @@ class SceneRenderer:
 
     def _scene_title(self, frame: Frame) -> str:
         if frame.step_number is None:
-            return "Block Move Planning (старт)"
+            return "Block Move Planning (start)"
         return f"Block Move Planning ({frame.step_number})"
 
     def _scene_summary(self, state: SceneState) -> list[str]:
