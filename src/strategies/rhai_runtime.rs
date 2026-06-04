@@ -174,8 +174,16 @@ impl RhaiRuntime {
     /// The caller can register native functions and then call
     /// [`load_file`](Self::load_file) or [`load_source`](Self::load_source).
     pub fn new() -> Self {
+        let mut engine = Engine::new();
+        // Rhai's default expression-depth limits (32/64) are too tight for
+        // realistic user scripts: a small A* heuristic with a few
+        // neighbour checks already trips the parser. Bump both to 256,
+        // which is plenty for the algorithms Bootfrost users will write
+        // while still preventing pathological scripts from consuming
+        // arbitrary compile time.
+        engine.set_max_expr_depths(128, 256);
         Self {
-            engine: Engine::new(),
+            engine,
             ast: None,
             source_path: None,
         }
