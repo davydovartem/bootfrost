@@ -19,8 +19,30 @@
 use std::fmt;
 use std::fs;
 use std::path::Path;
+use std::sync::{Mutex, OnceLock};
 
-use rhai::{Engine, EvalAltResult, FuncArgs, Scope, Variant, AST};
+use rhai::{Array, Dynamic, Engine, EvalAltResult, FuncArgs, Scope, Variant, AST};
+
+use crate::term::{PSTerms, Term};
+use crate::misc::TermId;
+
+// =========================================================================
+//                          Global Rhai slot
+// =========================================================================
+
+/// Process-wide slot for a single [`RhaiRuntime`].
+///
+/// `IFunction` callbacks in Bootfrost are plain `fn` pointers with no
+/// captured state, so user-defined Rhai functions are reached through
+/// this static slot. The slot is initialised exactly once via
+/// [`RhaiRuntime::install_global`] (typically from `main` when a
+/// `--user-ifuncs` flag is supplied) and consulted from inside the
+/// `a_star_step` ifunction wrapper.
+static RHAI_GLOBAL: OnceLock<Mutex<Option<RhaiRuntime>>> = OnceLock::new();
+
+fn global_slot() -> &'static Mutex<Option<RhaiRuntime>> {
+    RHAI_GLOBAL.get_or_init(|| Mutex::new(None))
+}
 
 // =========================================================================
 //                              Error type
@@ -338,6 +360,164 @@ impl RhaiRuntime {
             },
         }
     }
+
+    // --- Global slot ---
+
+    /// Install this runtime as the process-wide Rhai slot.
+    ///
+    /// After this call, [`RhaiRuntime::with_global`] will return a
+    /// reference to this runtime from any thread. The slot is
+    /// intentionally single-valued: a second `install_global` call
+    /// overwrites the previous one. This is meant to be called exactly
+    /// once from `main`, before inference starts.
+    pub fn install_global(self) -> Result<(), RhaiRuntimeError> {
+        let mut guard = global_slot()
+            .lock()
+            .expect("RhaiRuntime global mutex poisoned");
+        *guard = Some(self);
+        Ok(())
+    }
+
+    /// Run `f` with a borrowed reference to the globally installed
+    /// runtime. Returns [`RhaiRuntimeError::ScriptNotLoaded`] if no
+    /// runtime has been installed yet.
+    pub fn with_global<F, R>(f: F) -> Result<R, RhaiRuntimeError>
+    where
+        F: FnOnce(&RhaiRuntime) -> Result<R, RhaiRuntimeError>,
+    {
+        let guard = global_slot()
+            .lock()
+            .expect("RhaiRuntime global mutex poisoned");
+        let rt = guard.as_ref().ok_or(RhaiRuntimeError::ScriptNotLoaded)?;
+        f(rt)
+    }
+
+    /// Convenience: drop whatever is currently in the global slot.
+    /// Primarily useful for tests that need to reset state between runs.
+    pub fn clear_global() {
+        if let Some(slot) = RHAI_GLOBAL.get() {
+            let mut guard = slot.lock().expect("RhaiRuntime global mutex poisoned");
+            *guard = None;
+        }
+    }
+}
+
+// =========================================================================
+//                          Term <-> Dynamic marshalling
+// =========================================================================
+
+/// Error returned by [`term_to_dynamic`] / [`dynamic_to_term`].
+#[derive(Debug)]
+pub enum MarshalError {
+    /// A `Term` variant has no natural Rhai representation.
+    UnsupportedTerm(String),
+    /// A `Dynamic` value has no natural `Term` representation.
+    UnsupportedDynamic(String),
+    /// A `Dynamic` array/list had an element of an unexpected type.
+    BadElement(String),
+}
+
+impl fmt::Display for MarshalError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::UnsupportedTerm(s) => write!(f, "cannot marshal Term to Rhai: {}", s),
+            Self::UnsupportedDynamic(s) => {
+                write!(f, "cannot marshal Rhai Dynamic to Term: {}", s)
+            }
+            Self::BadElement(s) => write!(f, "bad element while marshalling: {}", s),
+        }
+    }
+}
+
+impl std::error::Error for MarshalError {}
+
+/// Convert a Bootfrost `TermId` into a Rhai `Dynamic`, descending into
+/// lists recursively. `Term::Integer`, `Term::Float`, `Term::Bool` and
+/// `Term::String` map to their natural Rhai counterparts; `Term::List`
+/// maps to a Rhai `Array`. Variables, functors, etc. are rejected with
+/// [`MarshalError::UnsupportedTerm`].
+pub fn term_to_dynamic(tid: TermId, psterms: &PSTerms) -> Result<Dynamic, MarshalError> {
+    let term = psterms.get_term(&tid);
+    term_to_dynamic_inner(&term, psterms)
+}
+
+fn term_to_dynamic_inner(term: &Term, psterms: &PSTerms) -> Result<Dynamic, MarshalError> {
+    match term {
+        Term::Bool(b) => Ok(Dynamic::from(*b)),
+        Term::Integer(i) => Ok(Dynamic::from(*i)),
+        Term::Float(f) => Ok(Dynamic::from(*f)),
+        Term::String(s) => Ok(Dynamic::from(s.clone())),
+        Term::List(items) => {
+            let arr: Result<Array, MarshalError> = items
+                .iter()
+                .map(|tid| term_to_dynamic(*tid, psterms))
+                .collect();
+            Ok(Dynamic::from(arr?))
+        }
+        other => Err(MarshalError::UnsupportedTerm(format!("{:?}", other))),
+    }
+}
+
+/// Convert a Rhai `Dynamic` into a Bootfrost `TermId`, registering any
+/// new terms in `psterms`. Recursively descends into arrays, producing
+/// nested `Term::List` values.
+pub fn dynamic_to_term(value: Dynamic, psterms: &mut PSTerms) -> Result<TermId, MarshalError> {
+    if value.is_int() {
+        let i = value
+            .as_int()
+            .map_err(|e| MarshalError::UnsupportedDynamic(e.to_string()))?;
+        let tid = psterms
+            .get_tid(Term::Integer(i))
+            .unwrap();
+        return Ok(tid);
+    }
+    if value.is_bool() {
+        let b = value
+            .as_bool()
+            .map_err(|e| MarshalError::UnsupportedDynamic(e.to_string()))?;
+        let tid = psterms
+            .get_tid(Term::Bool(b))
+            .unwrap();
+        return Ok(tid);
+    }
+    if value.is_float() {
+        let f = value
+            .as_float()
+            .map_err(|e| MarshalError::UnsupportedDynamic(e.to_string()))?;
+        let tid = psterms
+            .get_tid(Term::Float(f))
+            .unwrap();
+        return Ok(tid);
+    }
+    if value.is_string() {
+        let s = value
+            .into_string()
+            .map_err(|e| MarshalError::UnsupportedDynamic(e.to_string()))?;
+        let tid = psterms
+            .get_tid(Term::String(s))
+            .unwrap();
+        return Ok(tid);
+    }
+    if value.is_array() {
+        let arr = value
+            .into_array()
+            .map_err(|e| MarshalError::UnsupportedDynamic(e.to_string()))?;
+        let mut items: Vec<TermId> = Vec::with_capacity(arr.len());
+        for d in arr.into_iter() {
+            items.push(dynamic_to_term(d, psterms)?);
+        }
+        let tid = psterms
+            .get_tid(Term::List(items))
+            .unwrap();
+        return Ok(tid);
+    }
+    if value.is_unit() {
+        return Err(MarshalError::UnsupportedDynamic("()".to_string()));
+    }
+    Err(MarshalError::UnsupportedDynamic(format!(
+        "type_id={:?}",
+        value.type_id()
+    )))
 }
 
 impl Default for RhaiRuntime {
@@ -475,5 +655,113 @@ mod tests {
         scope.push("pi", 314_i64);
         let result: i64 = rt.call_fn_with_scope(&mut scope, "read_pi", ()).unwrap();
         assert_eq!(result, 314);
+    }
+
+    // -------- Global slot --------
+
+    #[test]
+    fn install_global_makes_runtime_reachable_via_with_global() {
+        RhaiRuntime::clear_global();
+        let rt = RhaiRuntime::from_source("fn hello() { 42 }").unwrap();
+        rt.install_global().unwrap();
+
+        let v: i64 = RhaiRuntime::with_global(|g| g.call_fn("hello", ()))
+            .expect("with_global should succeed");
+        assert_eq!(v, 42);
+        RhaiRuntime::clear_global();
+    }
+
+    #[test]
+    fn with_global_returns_script_not_loaded_when_uninitialised() {
+        RhaiRuntime::clear_global();
+        let err = RhaiRuntime::with_global(|g| g.call_fn::<i64, _>("any", ())).unwrap_err();
+        assert!(matches!(err, RhaiRuntimeError::ScriptNotLoaded));
+    }
+
+    #[test]
+    fn install_global_overwrites_previous_runtime() {
+        RhaiRuntime::clear_global();
+        let rt1 = RhaiRuntime::from_source("fn pick() { 1 }").unwrap();
+        rt1.install_global().unwrap();
+
+        let rt2 = RhaiRuntime::from_source("fn pick() { 2 }").unwrap();
+        rt2.install_global().unwrap();
+
+        let v: i64 = RhaiRuntime::with_global(|g| g.call_fn("pick", ())).unwrap();
+        assert_eq!(v, 2, "second install should overwrite the first");
+        RhaiRuntime::clear_global();
+    }
+
+    // -------- Marshalling --------
+
+    #[test]
+    fn term_to_dynamic_handles_atomic_types() {
+        let mut ps = PSTerms::new();
+        let i = ps.get_tid(Term::Integer(7)).unwrap();
+        let b = ps.get_tid(Term::Bool(true)).unwrap();
+        let f = ps.get_tid(Term::Float(1.5)).unwrap();
+        let s = ps.get_tid(Term::String("x".to_string())).unwrap();
+
+        assert_eq!(term_to_dynamic(i, &ps).unwrap().as_int().unwrap(), 7);
+        assert!(term_to_dynamic(b, &ps).unwrap().as_bool().unwrap());
+        assert!((term_to_dynamic(f, &ps).unwrap().as_float().unwrap() - 1.5).abs() < 1e-9);
+        assert_eq!(
+            term_to_dynamic(s, &ps).unwrap().into_string().unwrap(),
+            "x"
+        );
+    }
+
+    #[test]
+    fn term_to_dynamic_handles_nested_list() {
+        let mut ps = PSTerms::new();
+        let one = ps.get_tid(Term::Integer(1)).unwrap();
+        let two = ps.get_tid(Term::Integer(2)).unwrap();
+        let three = ps.get_tid(Term::Integer(3)).unwrap();
+        let inner = ps.get_tid(Term::List(vec![one, two])).unwrap();
+        let outer = ps.get_tid(Term::List(vec![inner, three])).unwrap();
+
+        let d = term_to_dynamic(outer, &ps).unwrap();
+        let arr = d.into_array().unwrap();
+        assert_eq!(arr.len(), 2);
+        let first = arr.into_iter().next().unwrap();
+        let first_arr = first.into_array().unwrap();
+        assert_eq!(first_arr.len(), 2);
+        assert_eq!(first_arr[0].as_int().unwrap(), 1);
+    }
+
+    #[test]
+    fn dynamic_to_term_round_trips_nested_lists() {
+        let mut ps = PSTerms::new();
+
+        // Build a 2x2 matrix as Rhai: [[1, 2], [3, 4]]
+        let arr: Array = vec![
+            Dynamic::from(1_i64),
+            Dynamic::from(2_i64),
+        ];
+        let matrix: Array = vec![
+            Dynamic::from(arr),
+            Dynamic::from(Array::from(vec![Dynamic::from(3_i64), Dynamic::from(4_i64)])),
+        ];
+        let d = Dynamic::from(matrix);
+
+        let tid = dynamic_to_term(d, &mut ps).unwrap();
+        let term = ps.get_term(&tid);
+        match term {
+            Term::List(rows) => {
+                assert_eq!(rows.len(), 2);
+                let row0 = ps.get_term(&rows[0]);
+                if let Term::List(items) = row0 {
+                    assert_eq!(items.len(), 2);
+                    if let Term::Integer(v) = ps.get_term(&items[0]) {
+                        assert_eq!(v, 1);
+                    } else {
+                        panic!("expected integer");
+                    }
+                } else {
+                    panic!("expected row to be a list");
+                }
+            }
+            _ => panic!("expected outer list"),
+        }
     }
 }

@@ -8,6 +8,12 @@
 //! The `grid(...)` helper builds a Rhai `Array of Array of i64` from
 //! a Rust `&[&[i64]]`, matching the way Bootfrost's `Term::List`
 //! representation will be marshalled into Rhai at integration time.
+//!
+//! The script takes a single Array argument (Bootfrost's
+//! `rhai_call` wrapper always passes one Array of params, so the
+//! script signature is `fn a_star_step(args)`), hence the
+//! `call_a_star(...)` helper that builds `[x, y, u, v, cells]` for
+//! every call.
 
 use bootfrost::strategies::rhai_runtime::RhaiRuntime;
 use rhai::{Array, Dynamic};
@@ -54,6 +60,19 @@ fn xy(arr: Array) -> (i64, i64) {
     (x, y)
 }
 
+/// Call `a_star_step` with the same arg-list shape that the Bootfrost
+/// `rhai_call` ifunction uses: a single Array `[x, y, u, v, cells]`.
+fn call_a_star(rt: &RhaiRuntime, x: i64, y: i64, u: i64, v: i64, cells: Array) -> Array {
+    let args: Array = vec![
+        Dynamic::from(x),
+        Dynamic::from(y),
+        Dynamic::from(u),
+        Dynamic::from(v),
+        Dynamic::from(cells),
+    ];
+    rt.call_fn("a_star_step", (args,)).unwrap()
+}
+
 // ----------------------------------------------------------------------
 // Trivial cases
 // ----------------------------------------------------------------------
@@ -62,9 +81,7 @@ fn xy(arr: Array) -> (i64, i64) {
 fn a_star_step_returns_start_when_already_at_goal() {
     let rt = load_astar_script();
     let cells = grid(&[&[1, 1, 1], &[1, 1, 1], &[1, 1, 1]]);
-    let result: Array = rt
-        .call_fn("a_star_step", (1i64, 1i64, 1i64, 1i64, cells))
-        .unwrap();
+    let result: Array = call_a_star(&rt, 1, 1, 1, 1, cells);
     assert_eq!(xy(result), (1, 1));
 }
 
@@ -72,9 +89,7 @@ fn a_star_step_returns_start_when_already_at_goal() {
 fn a_star_step_returns_minus_one_on_empty_grid() {
     let rt = load_astar_script();
     let cells: Array = vec![];
-    let result: Array = rt
-        .call_fn("a_star_step", (0i64, 0i64, 1i64, 1i64, cells))
-        .unwrap();
+    let result: Array = call_a_star(&rt, 0, 0, 1, 1, cells);
     assert_eq!(xy(result), (-1, -1));
 }
 
@@ -93,9 +108,7 @@ fn a_star_step_finds_path_around_blocked_middle_row() {
     // up) the first step is forced to (1, 0).
     let rt = load_astar_script();
     let cells = grid(&[&[1, 1, 1], &[1, 0, 1], &[1, 1, 1]]);
-    let result: Array = rt
-        .call_fn("a_star_step", (0i64, 0i64, 2i64, 2i64, cells))
-        .unwrap();
+    let result: Array = call_a_star(&rt, 0, 0, 2, 2, cells);
     assert_eq!(xy(result), (1, 0));
 }
 
@@ -109,9 +122,7 @@ fn a_star_step_finds_path_through_corridor() {
     // down the right column. First step is forced to (1, 0).
     let rt = load_astar_script();
     let cells = grid(&[&[1, 1, 1, 1, 1], &[0, 0, 0, 0, 1], &[1, 1, 1, 1, 1]]);
-    let result: Array = rt
-        .call_fn("a_star_step", (0i64, 0i64, 4i64, 2i64, cells))
-        .unwrap();
+    let result: Array = call_a_star(&rt, 0, 0, 4, 2, cells);
     assert_eq!(xy(result), (1, 0));
 }
 
@@ -126,9 +137,7 @@ fn a_star_step_finds_path_through_vertical_corridor() {
     // then right to (1,3), then right to (2,3). First step: (0, 1).
     let rt = load_astar_script();
     let cells = grid(&[&[1, 0, 1], &[1, 0, 1], &[1, 0, 1], &[1, 1, 1]]);
-    let result: Array = rt
-        .call_fn("a_star_step", (0i64, 0i64, 2i64, 3i64, cells))
-        .unwrap();
+    let result: Array = call_a_star(&rt, 0, 0, 2, 3, cells);
     assert_eq!(xy(result), (0, 1));
 }
 
@@ -145,9 +154,7 @@ fn a_star_step_in_open_grid_picks_right_neighbour_first() {
     // first step is the right neighbour (dirs = [[1,0],[-1,0],[0,1],[0,-1]]).
     let rt = load_astar_script();
     let cells = grid(&[&[1, 1, 1], &[1, 1, 1], &[1, 1, 1]]);
-    let result: Array = rt
-        .call_fn("a_star_step", (0i64, 0i64, 2i64, 2i64, cells))
-        .unwrap();
+    let result: Array = call_a_star(&rt, 0, 0, 2, 2, cells);
     assert_eq!(xy(result), (1, 0));
 }
 
@@ -160,9 +167,7 @@ fn a_star_step_returns_minus_one_when_no_path_exists() {
     // Disconnected grid: top-left is isolated from bottom-right.
     let rt = load_astar_script();
     let cells = grid(&[&[1, 0, 0], &[0, 0, 0], &[0, 0, 1]]);
-    let result: Array = rt
-        .call_fn("a_star_step", (0i64, 0i64, 2i64, 2i64, cells))
-        .unwrap();
+    let result: Array = call_a_star(&rt, 0, 0, 2, 2, cells);
     assert_eq!(xy(result), (-1, -1));
 }
 
@@ -170,9 +175,7 @@ fn a_star_step_returns_minus_one_when_no_path_exists() {
 fn a_star_step_returns_minus_one_when_start_is_blocked() {
     let rt = load_astar_script();
     let cells = grid(&[&[0, 1], &[1, 1]]);
-    let result: Array = rt
-        .call_fn("a_star_step", (0i64, 0i64, 1i64, 1i64, cells))
-        .unwrap();
+    let result: Array = call_a_star(&rt, 0, 0, 1, 1, cells);
     assert_eq!(xy(result), (-1, -1));
 }
 
@@ -180,9 +183,7 @@ fn a_star_step_returns_minus_one_when_start_is_blocked() {
 fn a_star_step_returns_minus_one_when_goal_is_blocked() {
     let rt = load_astar_script();
     let cells = grid(&[&[1, 1], &[1, 0]]);
-    let result: Array = rt
-        .call_fn("a_star_step", (0i64, 0i64, 1i64, 1i64, cells))
-        .unwrap();
+    let result: Array = call_a_star(&rt, 0, 0, 1, 1, cells);
     assert_eq!(xy(result), (-1, -1));
 }
 
@@ -190,8 +191,40 @@ fn a_star_step_returns_minus_one_when_goal_is_blocked() {
 fn a_star_step_returns_minus_one_when_goal_is_out_of_bounds() {
     let rt = load_astar_script();
     let cells = grid(&[&[1, 1], &[1, 1]]);
-    let result: Array = rt
-        .call_fn("a_star_step", (0i64, 0i64, 5i64, 5i64, cells))
-        .unwrap();
+    let result: Array = call_a_star(&rt, 0, 0, 5, 5, cells);
     assert_eq!(xy(result), (-1, -1));
+}
+
+// ---- a_star_path_exists ----
+
+fn call_path_exists(rt: &RhaiRuntime, x: i64, y: i64, u: i64, v: i64, cells: Array) -> i64 {
+    let args: Array = vec![
+        Dynamic::from(x),
+        Dynamic::from(y),
+        Dynamic::from(u),
+        Dynamic::from(v),
+        Dynamic::from(cells),
+    ];
+    rt.call_fn("a_star_path_exists", (args,)).unwrap()
+}
+
+#[test]
+fn a_star_path_exists_returns_one_when_path_exists() {
+    let rt = load_astar_script();
+    let cells = grid(&[&[1, 1, 1], &[1, 0, 1], &[1, 1, 1]]);
+    assert_eq!(call_path_exists(&rt, 0, 0, 2, 2, cells), 1);
+}
+
+#[test]
+fn a_star_path_exists_returns_zero_when_no_path() {
+    let rt = load_astar_script();
+    let cells = grid(&[&[1, 0, 0], &[0, 0, 0], &[0, 0, 1]]);
+    assert_eq!(call_path_exists(&rt, 0, 0, 2, 2, cells), 0);
+}
+
+#[test]
+fn a_star_path_exists_returns_zero_when_start_blocked() {
+    let rt = load_astar_script();
+    let cells = grid(&[&[0, 1], &[1, 1]]);
+    assert_eq!(call_path_exists(&rt, 0, 0, 1, 1, cells), 0);
 }

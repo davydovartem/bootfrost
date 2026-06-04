@@ -10,5 +10,5 @@ if errorlevel 1 (
   exit /b 1
 )
 
-".\%DST%" -s general -l 300 -f BlockMovePlanning.pcsf -j > BlockMovePlanning.log.pcsf
-python ../tools/block_move_viewer/viewer.py
+".\%DST%" -u ../tests/scripts/astar.rhai -s general -l 300 -f BlockMovePlanningSimple.pcsf -j > BlockMovePlanningSimple.log.pcsf
+python ../tools/block_move_viewer/viewer.py --json BlockMovePlanningSimple.json

@@ -5,10 +5,9 @@ use crate::solver::*;
 use crate::strategies::environment::*;
 use crate::strategies::attributes::*;
 use crate::strategies::strategies::Strategy;
+use crate::strategies::rhai_runtime::{self, RhaiRuntime, RhaiRuntimeError};
+use rhai::Dynamic;
 use std::fs;
-
-
-
 use std::collections::HashMap;
 
 type IFunction = fn(&Vec<TermId>, &mut PEnv) -> TermId;
@@ -829,6 +828,92 @@ fn dist(args: &Vec<TermId>, env: &mut PEnv) -> TermId {
 }
 
 // ====
+// Bridge to user-defined Rhai functions.
+//
+// `rhai_call(Name, Args)` is a single generic ifunction that lets a
+// Bootfrost formula invoke *any* function exposed by a user-supplied
+// Rhai script (loaded at startup via `--user-ifuncs`). The script
+// receives a single array argument `args` and returns whatever value
+// it likes. `rhai_call` returns a marshalled `Term::List` of the
+// result elements (booleans, integers, nested arrays) so the formula
+// can destructure with `first` / `last` or treat it as opaque.
+//
+// Adding a new user function does NOT require touching this file: just
+// register the function in the `.rhai` script and reference its name
+// from the formula.
+
+fn rhai_call(args: &Vec<TermId>, env: &mut PEnv) -> TermId {
+    if args.len() != 2 {
+        panic!(
+            "rhai_call expects exactly 2 arguments (name, args), got {}",
+            args.len()
+        );
+    }
+
+    // First argument: function name as a Bootfrost string term.
+    let name = match env.psterms.get_term(&args[0]) {
+        Term::String(s) => s.clone(),
+        other => panic!(
+            "rhai_call: first argument must be a string (function name), got {:?}",
+            other
+        ),
+    };
+
+    // Second argument: list of values to forward to the Rhai function.
+    // Marshalled into a single Rhai Array; the script destructures it.
+    let params_dyn = match rhai_runtime::term_to_dynamic(args[1], env.psterms) {
+        Ok(d) => d,
+        Err(e) => panic!("rhai_call: failed to marshal args list: {}", e),
+    };
+    let params_array = match params_dyn.into_array() {
+        Ok(a) => a,
+        Err(e) => panic!("rhai_call: args must be a list, got {}", e),
+    };
+
+    // Invoke the Rhai function via the global slot. We always pass
+    // exactly one argument (the array) to keep the call signature
+    // independent of the user's arity.
+    let result_dyn: rhai::Dynamic = match RhaiRuntime::with_global(|rt| {
+        rt.call_fn(name.as_str(), (params_array,))
+    }) {
+        Ok(d) => d,
+        Err(RhaiRuntimeError::ScriptNotLoaded) => {
+            panic!(
+                "rhai_call: no Rhai script has been installed; pass --user-ifuncs <file> on the command line"
+            );
+        }
+        Err(e) => panic!("rhai_call: Rhai call failed: {}", e),
+    };
+
+    // Marshal the result back into a Term.
+    //
+    // PCSF's `==` on integer/boolean terms only succeeds when the two
+    // operands share a `TermId` (terms are interned), so we MUST return
+    // the scalar directly instead of wrapping it in a single-element
+    // list. Wrapping would make
+    //     rhai_call("a_star_path_exists", [...]) == 1
+    // compare TermId(List) with TermId(Integer(1)) — always false.
+    //
+    // Arrays still come back as a `Term::List`, which the formula
+    // destructures with `first` / `last`.
+    if result_dyn.is_array() {
+        let arr = result_dyn
+            .into_array()
+            .expect("just checked is_array");
+        let mut items: Vec<TermId> = Vec::with_capacity(arr.len());
+        for d in arr.into_iter() {
+            items.push(
+                rhai_runtime::dynamic_to_term(d, env.psterms)
+                    .expect("rhai_call: failed to marshal result element"),
+            );
+        }
+        env.psterms.get_tid(Term::List(items)).unwrap()
+    } else {
+        rhai_runtime::dynamic_to_term(result_dyn, env.psterms)
+            .expect("rhai_call: failed to marshal scalar result")
+    }
+}
+
 pub fn init() -> (PSTerms, HashMap<String, SymbolId>){
 	let mut psterms = PSTerms::new();
 	let mut fmap = HashMap::new();
@@ -874,6 +959,7 @@ pub fn init() -> (PSTerms, HashMap<String, SymbolId>){
 		("get".to_string(), (get_at as IFunction, Position::Classic)),
 		("set".to_string(), (set_at as IFunction, Position::Classic)),
 		("dist".to_string(), (dist as IFunction, Position::Classic)),
+		("rhai_call".to_string(), (rhai_call as IFunction, Position::Classic)),
 		// ("&".to_string(), (notequal as IFunction, Position::Infix)),
 	]);
 

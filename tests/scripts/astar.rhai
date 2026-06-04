@@ -1,24 +1,53 @@
 // A* pathfinding on a 2D grid for Bootfrost's block-move planning.
 //
-// Scenario: on each step of the inference the prover asks the script
-// for the next cell to move to. The function below returns the first
-// step of the shortest 4-neighbour path from (x, y) to (u, v), avoiding
-// cells whose value in `cells` is 0.
+// The script exposes two functions, both invoked from PCSF as
+//     rhai_call("a_star_step",         [x, y, u, v, cells])
+//     rhai_call("a_star_path_exists",  [x, y, u, v, cells])
+// (the first argument to `rhai_call` is the function name, the second
+// is the Array of arguments forwarded to the script).
 //
-// `cells` is a 2D array with cells[row][col] indexing. A value of 0
-// marks a blocked cell, any non-zero value is free. The caller is
+// `cells` is a 2D array indexed `cells[row][col]`. A value of 0 marks
+// a blocked cell, any non-zero value is free. The caller is
 // responsible for ensuring the array is rectangular.
 //
-// Returns:
-//   [next_x, next_y]   if a path exists: the first step after (x, y).
-//   [x, y]              if start and goal coincide.
-//   [-1, -1]            if no path exists or inputs are out of range.
+// `a_star_step` returns the 2-element array [next_x, next_y] — the
+// first cell on the shortest 4-neighbour path from (x, y) to (u, v).
+// When the start and goal coincide it returns [x, y]. When the start
+// is blocked, the target is unreachable, or the inputs are out of
+// range, it returns [-1, -1].
+//
+// `a_star_path_exists` is a thin wrapper that returns the integer 1
+// when a non-trivial path exists and 0 otherwise. PCSF's `==`
+// comparison on integer terms works through term interning, so the
+// formula can guard movement with
+//     rhai_call("a_star_path_exists", [...]) == 1
+// to avoid passing [-1, -1] into the cells-matrix `set(...)` and
+// panicking on an out-of-bounds index.
 
-fn a_star_step(x, y, u, v, cells) {
+fn a_star_step(args) {
+    if len(args) != 5 { return [-1, -1]; }
+    let x = args[0];
+    let y = args[1];
+    let u = args[2];
+    let v = args[3];
+    let cells = args[4];
+
     if !in_bounds(x, y, cells) { return [-1, -1]; }
     if !in_bounds(u, v, cells) { return [-1, -1]; }
     if x == u && y == v { return [x, y]; }
     return search(x, y, u, v, cells);
+}
+
+fn a_star_path_exists(args) {
+    let r = a_star_step(args);
+    if r[0] < 0 || r[1] < 0 { return 0; }
+    if r[0] == 0 && r[1] == 0 && len(args) == 5 {
+        // Disambiguate the "no path" sentinel [-1, -1] from a real
+        // path that happens to land on the origin.  Only return 1 if
+        // a_star_step itself signalled a valid (non -1) answer.
+    }
+    if r[0] == -1 { return 0; }
+    return 1;
 }
 
 fn in_bounds(px, py, cells) {
@@ -107,3 +136,4 @@ fn search(x, y, u, v, cells) {
 
     return [-1, -1];
 }
+
