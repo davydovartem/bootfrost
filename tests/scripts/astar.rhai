@@ -24,116 +24,210 @@
 // to avoid passing [-1, -1] into the cells-matrix `set(...)` and
 // panicking on an out-of-bounds index.
 
-fn a_star_step(args) {
-    if len(args) != 5 { return [-1, -1]; }
-    let x = args[0];
-    let y = args[1];
-    let u = args[2];
-    let v = args[3];
-    let cells = args[4];
-
-    if !in_bounds(x, y, cells) { return [-1, -1]; }
-    if !in_bounds(u, v, cells) { return [-1, -1]; }
-    if x == u && y == v { return [x, y]; }
-    return search(x, y, u, v, cells);
-}
-
-fn a_star_path_exists(args) {
-    let r = a_star_step(args);
-    if r[0] < 0 || r[1] < 0 { return 0; }
-    if r[0] == 0 && r[1] == 0 && len(args) == 5 {
-        // Disambiguate the "no path" sentinel [-1, -1] from a real
-        // path that happens to land on the origin.  Only return 1 if
-        // a_star_step itself signalled a valid (non -1) answer.
-    }
-    if r[0] == -1 { return 0; }
-    return 1;
-}
-
-fn in_bounds(px, py, cells) {
-    if len(cells) == 0 { return false; }
-    if py < 0 || py >= len(cells) { return false; }
-    if px < 0 || px >= len(cells[py]) { return false; }
-    return cells[py][px] != 0;
-}
-
-/// Return the index of the element with the smallest f-score (item[0]).
-/// Rhai passes arrays by value, so the actual `remove` must be performed
-/// by the caller on its own copy of the open list.
-fn find_min(open) {
-    let best_i = 0;
-    let best_f = open[0][0];
-    let n = len(open);
-    for i in 0..n {
-        if open[i][0] < best_f {
-            best_f = open[i][0];
-            best_i = i;
-        }
-    }
-    return best_i;
-}
-
-fn heuristic(px, py, u, v) {
-    return abs(px - u) + abs(py - v);
-}
-
-fn search(x, y, u, v, cells) {
-    let dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-    let rows = len(cells);
-    let cols = len(cells[0]);
-
-    let open = [];
-    let parent_map = #{};
-    parent_map[`${x},${y}`] = [-1, -1];
-    open.push([heuristic(x, y, u, v), 0, x, y]);
-
-    let max_iter = rows * cols * 4 + 16;
-    let iters = 0;
-
-    while len(open) > 0 && iters < max_iter {
-        iters += 1;
-        let best_i = find_min(open);
-        let node = open.remove(best_i);
-        let cg = node[1];
-        let cx = node[2];
-        let cy = node[3];
-
-        if cx == u && cy == v {
-            // Reconstruct by walking parent_map. The start has parent
-            // (-1, -1) as a sentinel, so we stop when we hit that.
-            let path = [[cx, cy]];
-            let cur_x = cx;
-            let cur_y = cy;
-            let safety = 0;
-            while safety < 100000 {
-                safety += 1;
-                let p = parent_map[`${cur_x},${cur_y}`];
-                if p[0] < 0 { break; }
-                path.insert(0, [p[0], p[1]]);
-                cur_x = p[0];
-                cur_y = p[1];
-            }
-            if len(path) > 1 {
-                return path[1];
-            }
-            return [cx, cy];
-        }
-
-        for d in dirs {
-            let nx = cx + d[0];
-            let ny = cy + d[1];
-            if ny < 0 || ny >= rows { continue; }
-            if nx < 0 || nx >= len(cells[ny]) { continue; }
-            if cells[ny][nx] == 0 { continue; }
-            if parent_map.contains(`${nx},${ny}`) { continue; }
-
-            let ng = cg + 1;
-            let nf = ng + heuristic(nx, ny, u, v);
-            parent_map[`${nx},${ny}`] = [cx, cy];
-            open.push([nf, ng, nx, ny]);
-        }
-    }
-
+fn invalid_step() {
     return [-1, -1];
 }
 
+fn in_bounds(x, y, width, height) {
+    return x >= 0 && y >= 0 && x < width && y < height;
+}
+
+fn cell_at(cells, x, y) {
+    let row = cells[y];
+    return row[x];
+}
+
+fn matrix_get(matrix, x, y) {
+    let row = matrix[y];
+    return row[x];
+}
+
+fn matrix_set(matrix, x, y, value) {
+    let row = matrix[y];
+    row[x] = value;
+    matrix[y] = row;
+    return matrix;
+}
+
+fn make_matrix(height, width, value) {
+    let matrix = [];
+    let y = 0;
+    while y < height {
+        let row = [];
+        let x = 0;
+        while x < width {
+            row.push(value);
+            x += 1;
+        }
+        matrix.push(row);
+        y += 1;
+    }
+    return matrix;
+}
+
+fn remove_index(arr, idx) {
+    let result = [];
+    let i = 0;
+    while i < arr.len() {
+        if i != idx {
+            result.push(arr[i]);
+        }
+        i += 1;
+    }
+    return result;
+}
+
+fn heuristic(x, y, u, v) {
+    return abs(x - u) + abs(y - v);
+}
+
+fn reconstruct_first_step(start_x, start_y, goal_x, goal_y, prev_x, prev_y) {
+    let cx = goal_x;
+    let cy = goal_y;
+
+    while true {
+        let px = matrix_get(prev_x, cx, cy);
+        let py = matrix_get(prev_y, cx, cy);
+
+        if px == -1 || py == -1 {
+            return invalid_step();
+        }
+
+        if px == start_x && py == start_y {
+            return [cx, cy];
+        }
+
+        cx = px;
+        cy = py;
+    }
+}
+
+fn a_star_step(args) {
+    if args.len() != 5 {
+        return invalid_step();
+    }
+
+    let start_x = args[0];
+    let start_y = args[1];
+    let goal_x = args[2];
+    let goal_y = args[3];
+    let cells = args[4];
+
+    let height = cells.len();
+    if height == 0 {
+        return invalid_step();
+    }
+
+    let first_row = cells[0];
+    let width = first_row.len();
+    if width == 0 {
+        return invalid_step();
+    }
+
+    if !in_bounds(start_x, start_y, width, height) || !in_bounds(goal_x, goal_y, width, height) {
+        return invalid_step();
+    }
+
+    if cell_at(cells, goal_x, goal_y) == 0 {
+        return invalid_step();
+    }
+
+    if start_x == goal_x && start_y == goal_y {
+        return [start_x, start_y];
+    }
+
+    let inf = width * height + 1;
+    let dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+    let open = [[start_x, start_y]];
+    let open_flags = matrix_set(make_matrix(height, width, false), start_x, start_y, true);
+    let closed = make_matrix(height, width, false);
+    let g_score = matrix_set(make_matrix(height, width, inf), start_x, start_y, 0);
+    let f_score = matrix_set(
+        make_matrix(height, width, inf),
+        start_x,
+        start_y,
+        heuristic(start_x, start_y, goal_x, goal_y)
+    );
+    let prev_x = make_matrix(height, width, -1);
+    let prev_y = make_matrix(height, width, -1);
+
+    while open.len() > 0 {
+        let best_idx = 0;
+        let first = open[0];
+        let best_x = first[0];
+        let best_y = first[1];
+        let best_f = matrix_get(f_score, best_x, best_y);
+
+        let i = 1;
+        while i < open.len() {
+            let node = open[i];
+            let node_x = node[0];
+            let node_y = node[1];
+            let node_f = matrix_get(f_score, node_x, node_y);
+            if node_f < best_f {
+                best_idx = i;
+                best_x = node_x;
+                best_y = node_y;
+                best_f = node_f;
+            }
+            i += 1;
+        }
+
+        open = remove_index(open, best_idx);
+        open_flags = matrix_set(open_flags, best_x, best_y, false);
+
+        if best_x == goal_x && best_y == goal_y {
+            return reconstruct_first_step(start_x, start_y, goal_x, goal_y, prev_x, prev_y);
+        }
+
+        if matrix_get(closed, best_x, best_y) {
+            continue;
+        }
+        closed = matrix_set(closed, best_x, best_y, true);
+
+        let current_g = matrix_get(g_score, best_x, best_y);
+
+        let d = 0;
+        while d < dirs.len() {
+            let dir = dirs[d];
+            let next_x = best_x + dir[0];
+            let next_y = best_y + dir[1];
+
+            if in_bounds(next_x, next_y, width, height)
+                && cell_at(cells, next_x, next_y) != 0
+                && !matrix_get(closed, next_x, next_y) {
+                let tentative_g = current_g + 1;
+                if tentative_g < matrix_get(g_score, next_x, next_y) {
+                    prev_x = matrix_set(prev_x, next_x, next_y, best_x);
+                    prev_y = matrix_set(prev_y, next_x, next_y, best_y);
+                    g_score = matrix_set(g_score, next_x, next_y, tentative_g);
+                    f_score = matrix_set(
+                        f_score,
+                        next_x,
+                        next_y,
+                        tentative_g + heuristic(next_x, next_y, goal_x, goal_y)
+                    );
+
+                    if !matrix_get(open_flags, next_x, next_y) {
+                        open.push([next_x, next_y]);
+                        open_flags = matrix_set(open_flags, next_x, next_y, true);
+                    }
+                }
+            }
+
+            d += 1;
+        }
+    }
+
+    return invalid_step();
+}
+
+fn a_star_path_exists(args) {
+    let step = a_star_step(args);
+    print(`step: args: ${args[0]}, ${args[1]}, ${args[2]}, ${args[3]}`);
+    if step[0] >= 0 && (step[0] != args[0] || step[1] != args[1]) {
+        return 1;
+    }
+    return 0;
+}

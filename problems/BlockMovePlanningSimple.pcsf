@@ -3,7 +3,7 @@
 	IsRobotInPair(1, 0), IsRobotInPair(2, 0), IsRobotInPair(3, 0), ~
 	IsRobotSingle(1, 0), IsRobotSingle(2, 0), IsRobotSingle(3, 0), ~
 	Pos(1, 1, 8), Pos(2, 7, 7), Pos(3, 7, 2), Pos(B1, 6, 5), Pos(B2, 2, 3), ~
-	AstarOutput([0,0]), ~
+	AstarOutput(1, [0,0]), AstarOutput(2,[0,0]), AstarOutput(3,[0,0]), NextStep(1, 0), NextStep(2, 0), NextStep(3, 0), ~
 	Cells([[0,0,0,0,0,0,0,0,0,0], ~	# y=0  (bottom,  wall)
 	       [0,1,1,1,1,1,1,1,1,0], ~	# y=1
 	       [0,1,1,1,1,1,1,0,1,0], ~	# y=2
@@ -57,7 +57,7 @@
 	#--------1.3
 	# Now strictly appoint, which robot go to the left and which to the right cell under the block.
 	# Compare the distance to the left cell only, the second robot goes to the right cell automatically.
-	#TODO: Calculate the distance to the left and right cells
+	#TODO: Calculate the distance to the left and right cells?
 	#6
 	! b, r1, r2, xb, yb, x1, y1, x2, y2 PairForBlock(b, r1, r2), Pos(b, xb, yb), ~
 			Pos(r1, x1, y1), Pos(r2, x2, y2), ~
@@ -71,29 +71,15 @@
 			dist(x2, y2, xb, yb - 1) <f dist(x1, y1, xb, yb - 1) $ remove_fact(0), remove_fact(4), remove_fact(5)
 		? AppM(r2, xb, yb - 1), AppM(r1, xb + 1, yb - 1), IsRobotInPair(r1, 1), IsRobotInPair(r2, 1)
 	#--------2
-	# Direction-selection rules #8-#11 are gone: `a_star_step` picks
-	# the next cell directly, so we no longer need to first pick a
-	# cardinal direction and then move in it.
-	#--------3
-	# Movement: ask the user-defined Rhai function `a_star_step` for the
-	# next cell of the shortest 4-neighbour path from (x, y) to (u, v)
-	# and move the robot there. The cells matrix is updated: old cell
-	# becomes free, new cell becomes occupied.
-	#
-	# `a_star_path_exists` is a sibling Rhai function that returns the
-	# integer 1 if a path exists and 0 otherwise. We use it as a guard
-	# in the `~` body so the rule refuses to fire when A* would have
-	# returned the [-1, -1] sentinel (otherwise the `set(...)` in the
-	# head would panic on a negative index).
-	#
-	# We call `rhai_call` several times (once per usage site) and pick
-	# components out with `first` / `last`. A* is side-effect-free so
-	# all invocations return identical results against the same
-	# snapshot of `cells`.
+	# `a_star_step` picks
+	# the next cell directly
 	#12
-	!r, x, y, u, v, cells  Pos(r, x, y), Cells(cells), AppM(r, u, v), ~
-				rhai_call("a_star_path_exists", [x, y, u, v, cells]) == 1 $ remove_fact(0), remove_fact(1)
-		? Pos(r, first(rhai_call("a_star_step", [x, y, u, v, cells])), last(rhai_call("a_star_step", [x, y, u, v, cells]))), Cells(set(y, x, 1, set(last(rhai_call("a_star_step", [x, y, u, v, cells])), first(rhai_call("a_star_step", [x, y, u, v, cells])), 0, cells)))
+	!r, x, y, u, v, cells, coords  Pos(r, x, y), Cells(cells), AppM(r, u, v), AstarOutput(r, coords), NextStep(r, 0) $ remove_fact(3), remove_fact(4)
+		? AstarOutput(r, rhai_call("a_star_step", [x, y, u, v, cells])), NextStep(r, 1)
+	!r, x, y, u, v, cells, coords  Pos(r, x, y), Cells(cells), AppM(r, u, v), ~
+								AstarOutput(r, coords), NextStep(r, 1)  $ remove_fact(0), remove_fact(1), remove_fact(4)
+		? 	Pos(r, first(coords), last(coords)), ~
+			Cells(set(y, x, 1, set(	last(coords), first(coords), 0, cells))), NextStep(r, 0)
 	# Check the condition of the robot to move the block in a pair. If the robot is adjacent to the block and ready to move, then it needs to turn north.
 	#32
 	!r, x, y, d, f  R(r, d), AppM(r, x, y), Pos(r, x, y), IsRobotInPair(r, 1) $ remove_fact(0), remove_fact(1)
