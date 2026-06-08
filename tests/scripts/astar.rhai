@@ -128,10 +128,6 @@ fn a_star_step(args) {
         return invalid_step();
     }
 
-    if cell_at(cells, goal_x, goal_y) == 0 {
-        return invalid_step();
-    }
-
     if start_x == goal_x && start_y == goal_y {
         return [start_x, start_y];
     }

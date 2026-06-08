@@ -3,6 +3,7 @@
 	IsRobotInPair(1, 0), IsRobotInPair(2, 0), IsRobotInPair(3, 0), ~
 	IsRobotSingle(1, 0), IsRobotSingle(2, 0), IsRobotSingle(3, 0), ~
 	Pos(1, 1, 8), Pos(2, 7, 7), Pos(3, 7, 2), Pos(B1, 6, 5), Pos(B2, 2, 3), ~
+	AstarOutput(1, [0,0]), AstarOutput(2,[0,0]), AstarOutput(3,[0,0]), NextStep(1, 0), NextStep(2, 0), NextStep(3, 0), ~
 	Cells([[0,0,0,0,0,0,0,0,0,0], ~	# y=0  (bottom,  wall)
 	       [0,1,1,1,1,1,1,1,1,0], ~	# y=1
 	       [0,1,1,1,1,1,1,0,1,0], ~	# y=2
@@ -26,7 +27,7 @@
 	#1
 	! IsBlockOnPosition(B1, 0), IsBlockOnPosition(B2, 1)
 		? TargetBlock(B1)
-	# #2
+	#2
 	! IsBlockOnPosition(B2, 0), IsBlockOnPosition(B1, 1)
 		? TargetBlock(B2)
 
@@ -80,230 +81,15 @@
 			dist(x2, y2, xb, yb - 1) <f dist(x1, y1, xb, yb - 1) $ remove_fact(0), remove_fact(4), remove_fact(5)
 		? AppM(r2, xb, yb - 1), AppM(r1, xb + 1, yb - 1), IsRobotInPair(r1, 1), IsRobotInPair(r2, 1)
 	#--------2
-	# If the distance between one of the neighboring cells to the appointment is less than the distance to the other neighboring cells, then we turn in that direction.
-	#8
-
-	!r, x, y, u, v, d R(r, d), Pos(r, x, y), AppM(r, u, v), ~
-				dist(x, y + 1, u, v) <f dist(x - 1, y, u, v), ~
-				dist(x, y + 1, u, v) <f dist(x + 1, y, u, v), ~
-				dist(x, y + 1, u, v) <f dist(x, y - 1, u, v) $ remove_fact(0)
-		? R(r, N)
-	#9
-	!r, x, y, u, v, d R(r, d), Pos(r, x, y), AppM(r, u, v), ~
-				dist(x, y - 1, u, v) <f dist(x - 1, y, u, v), ~
-				dist(x, y - 1, u, v) <f dist(x + 1, y, u, v), ~
-				dist(x, y - 1, u, v) <f dist(x, y + 1, u, v) $ remove_fact(0)
-		? R(r, S)
-	#10
-	!r, x, y, u, v, d R(r, d), Pos(r, x, y), AppM(r, u, v), ~
-				dist(x - 1, y, u, v) <f dist(x + 1, y, u, v), ~
-				dist(x - 1, y, u, v) <f dist(x, y - 1, u, v), ~
-				dist(x - 1, y, u, v) <f dist(x, y + 1, u, v) $ remove_fact(0)
-		? R(r, W)
-	#11
-	!r, x, y, u, v, d R(r, d), Pos(r, x, y), AppM(r, u, v), ~
-				dist(x + 1, y, u, v) <f dist(x - 1, y, u, v), ~
-				dist(x + 1, y, u, v) <f dist(x, y + 1, u, v), ~
-				dist(x + 1, y, u, v) <f dist(x, y - 1, u, v) $ remove_fact(0)
-		? R(r, E)
-	#--------3
-	# This part of the rules corresponds to the movement of the robots in the oriented direction.
-	#12
-	!r,x,y,u,v,cells  R(r, N), Pos(r, x, y), Cells(cells), AppM(r,u,v), ~
-				get(y + 1, x, cells) == 1, ~
-				dist(x, y, u, v) >f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells)))
-	#13
-	!r,x,y,u,v,cells  R(r, E), Pos(r, x, y), Cells(cells), AppM(r,u,v), ~
-				get(y, x + 1, cells) == 1, ~
-				dist(x, y, u, v) >f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells)))
-	#14
-	!r,x,y,u,v,cells  R(r, S), Pos(r, x, y), Cells(cells), AppM(r,u,v), ~
-				get(y - 1, x, cells) == 1, ~
-				dist(x, y, u, v) >f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells)))
-	#15
-	!r,x,y,u,v,cells  R(r, W), Pos(r, x, y), Cells(cells), AppM(r,u,v), ~
-				get(y, x - 1, cells) == 1, ~
-				dist(x, y, u, v) >f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells)))
-	#--------3.5
-	# Avoid the obstacle
-	# If the cell where the robot is oriented is occupied, and left and right cells are free then move to the direction which is closer to the appointment
-	# If left or right cells, is occupied and closer to the appointment than another, then leap back and turn and move to the cell which is closer to the appointment
-	# North
-	#16
-	!r,x,y,u,v,cells  R(r, N), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y + 1, x, cells) == 0, or(x != u, y != v), ~
-					get(y, x - 1, cells) == 1, ~
-					dist(x - 1, y, u, v) <f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells))), AvoidWall(r, L)
-	#17
-	!r,x,y,u,v,cells  R(r, N), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y + 1, x, cells) == 0, or(x != u, y != v), ~
-					get(y, x + 1, cells) == 1, ~
-					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells))), AvoidWall(r, R)
-	# If the cell "good left" is occupied, then leap back
-	#18
-	!r,x,y,u,v,cells  R(r, N), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y + 1, x, cells) == 0, or(x != u, y != v), ~
-					get(y, x - 1, cells) == 0, dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(2), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells))), Avoid(r)
-			! x,y,cells R(r, N), Pos(r, x, y ), Cells(cells), get(y, x - 1, cells) == 1, Avoid(r), ~
-					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, W), Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells)))
-			! x,y,cells R(r, N), Pos(r, x, y ), Cells(cells), get(y, x + 1, cells) == 1, Avoid(r), ~
-					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, E), Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells)))
-	# If the cell "good right" is occupied, then leap back
-	#19
-	!r,x,y,u,v,cells  R(r, N), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y + 1, x, cells) == 0, or(x != u, y != v), ~
-					get(y, x + 1, cells) == 0, dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(2), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells))), Avoid(r)
-			! x,y,cells R(r, N), Pos(r, x, y ), Cells(cells), get(y, x - 1, cells) == 1, Avoid(r), ~
-					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, W), Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells)))
-			! x,y,cells R(r, N), Pos(r, x, y ), Cells(cells), get(y, x + 1, cells) == 1, Avoid(r), ~
-					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, E), Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells)))
-	# East
-	#20
-	!r,x,y,u,v,cells  R(r, E), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y, x + 1, cells) == 0, or(x != u, y != v), ~
-					get(y + 1, x, cells) == 1, ~
-					dist(x, y + 1, u, v) <f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells))), AvoidWall(r, L)
-	#21
-	!r,x,y,u,v,cells  R(r, E), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y, x + 1, cells) == 0, or(x != u, y != v), ~
-					get(y - 1, x, cells) == 1, ~
-					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells))), AvoidWall(r, R)
-	# If the cell "good left" is occupied, then leap back
-	#22
-	!r,x,y,u,v,cells  R(r, E), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y, x + 1, cells) == 0, or(x != u, y != v), ~
-					get(y + 1, x, cells) == 0, dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(2), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells))), Avoid(r)
-			!x,y,cells R(r, E), Pos(r, x, y), Cells(cells), get(y + 1, x, cells) == 1, Avoid(r), ~
-					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, N), Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells)))
-			!x,y,cells R(r, E), Pos(r, x, y), Cells(cells), get(y - 1, x, cells) == 1, Avoid(r), ~
-					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, S), Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells)))
-	# If the cell "good right" is occupied, then leap back
-	#23
-	!r,x,y,u,v,cells  R(r, E), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y, x + 1, cells) == 0, or(x != u, y != v), ~
-					get(y - 1, x, cells) == 0, dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(2), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells))), Avoid(r)
-			!x,y,cells R(r, E), Pos(r, x, y), Cells(cells), get(y + 1, x, cells) == 1, Avoid(r), ~
-					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, N), Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells)))
-			!x,y,cells R(r, E), Pos(r, x, y), Cells(cells), get(y - 1, x, cells) == 1, Avoid(r), ~
-					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, S), Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells)))
-	# South
-	#24
-	!r,x,y,u,v,cells  R(r, S), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y - 1, x, cells) == 0, or(x != u, y != v), ~
-					get(y, x + 1, cells) == 1, ~
-					dist(x + 1, y, u, v) <f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells))), AvoidWall(r, L)
-	#25
-	!r,x,y,u,v,cells  R(r, S), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y - 1, x, cells) == 0, or(x != u, y != v), ~
-					get(y, x - 1, cells) == 1, ~
-					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells))), AvoidWall(r, R)
-	# If the cell "good left" is occupied, then leap back
-	#26
-	!r,x,y,u,v,cells  R(r, S), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y - 1, x, cells) == 0, or(x != u, y != v), ~
-					get(y, x + 1, cells) == 0, dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(2), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells))), Avoid(r)
-			!x,y,cells R(r, S), Pos(r, x, y), Cells(cells), get(y, x + 1, cells) == 1, Avoid(r), ~
-					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, E), Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells)))
-			!x,y,cells R(r, S), Pos(r, x, y), Cells(cells), get(y, x - 1, cells) == 1, Avoid(r), ~
-					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, W), Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells)))
-	# If the cell "good right" is occupied, then leap back
-	#27
-	!r,x,y,u,v,cells  R(r, S), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y - 1, x, cells) == 0, or(x != u, y != v), ~
-					get(y, x - 1, cells) == 0, dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(2), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells))), Avoid(r)
-			!x,y,cells R(r, S), Pos(r, x, y), Cells(cells), get(y, x + 1, cells) == 1, Avoid(r), ~
-					dist(x + 1, y, u, v) <=f dist(x - 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, E), Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells)))
-			!x,y,cells R(r, S), Pos(r, x, y), Cells(cells), get(y, x - 1, cells) == 1, Avoid(r), ~
-					dist(x - 1, y, u, v) <=f dist(x + 1, y, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, W), Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells)))
-	# West
-	#28
-	!r,x,y,u,v,cells  R(r, W), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y, x - 1, cells) == 0, or(x != u, y != v), ~
-					get(y - 1, x, cells) == 1, ~
-					dist(x, y - 1, u, v) <f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells))), AvoidWall(r, L)
-	#29
-	!r,x,y,u,v,cells  R(r, W), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y, x - 1, cells) == 0, or(x != u, y != v), ~
-					get(y + 1, x, cells) == 1, ~
-					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(2)
-		? Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells))), AvoidWall(r, R)
-	# If the cell "good left" is occupied, then leap back
-	#30
-	!r,x,y,u,v,cells  R(r, W), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y, x - 1, cells) == 0, or(x != u, y != v), ~
-					get(y - 1, x, cells) == 0, dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(2), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells))), Avoid(r)
-			!x,y,cells R(r, W), Pos(r, x, y), Cells(cells), get(y - 1, x, cells) == 1, Avoid(r), ~
-					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, S), Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells)))
-			!x,y,cells R(r, W), Pos(r, x, y), Cells(cells), get(y + 1, x, cells) == 1, Avoid(r), ~
-					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, N), Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells)))
-	# If the cell "good right" is occupied, then leap back
-	#31
-	!r,x,y,u,v,cells  R(r, W), Pos(r, x, y), Cells(cells), AppM(r, u, v), get(y, x - 1, cells) == 0, or(x != u, y != v), ~
-					get(y + 1, x, cells) == 0, dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(2), answer_subquestion(0), answer_subquestion(1)
-		? Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells))), Avoid(r)
-			!x,y,cells R(r, W), Pos(r, x, y), Cells(cells), get(y - 1, x, cells) == 1, Avoid(r), ~
-					dist(x, y - 1, u, v) <=f dist(x, y + 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, S), Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells)))
-			!x,y,cells R(r, W), Pos(r, x, y), Cells(cells), get(y + 1, x, cells) == 1, Avoid(r), ~
-					dist(x, y + 1, u, v) <=f dist(x, y - 1, u, v) $ remove_fact(0), remove_fact(1), remove_fact(2), answer_once()
-				? R(r, N), Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells)))
-
-	# Continue the bypassing on the chosen side
-	!r,x,y,u,v,cells R(r, N), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, L), get(y + 1, x, cells) == 0, or(x != u, y != v), ~
-					get(y, x - 1, cells) == 1 $ remove_fact(1), remove_fact(2)
-		? Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells)))
-	!r,x,y,u,v,cells R(r, N), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, R), get(y + 1, x, cells) == 0, or(x != u, y != v), ~
-					get(y, x + 1, cells) == 1 $ remove_fact(1), remove_fact(2)
-		? Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells)))
-	!r,x,y,u,v,cells R(r, E), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, L), get(y, x + 1, cells) == 0, or(x != u, y != v), ~
-					get(y + 1, x, cells) == 1 $ remove_fact(1), remove_fact(2)
-		? Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells)))
-	!r,x,y,u,v,cells R(r, E), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, R), get(y, x + 1, cells) == 0, or(x != u, y != v), ~
-					get(y - 1, x, cells) == 1 $ remove_fact(1), remove_fact(2)
-		? Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells)))
-	!r,x,y,u,v,cells R(r, S), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, L), get(y - 1, x, cells) == 0, or(x != u, y != v), ~
-					get(y, x + 1, cells) == 1 $ remove_fact(1), remove_fact(2)
-		? Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells)))
-	!r,x,y,u,v,cells R(r, S), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, R), get(y - 1, x, cells) == 0, or(x != u, y != v), ~
-					get(y, x - 1, cells) == 1 $ remove_fact(1), remove_fact(2)
-		? Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells)))
-	!r,x,y,u,v,cells R(r, W), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, L), get(y, x - 1, cells) == 0, or(x != u, y != v), ~
-					get(y - 1, x, cells) == 1 $ remove_fact(1), remove_fact(2)
-		? Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells)))
-	!r,x,y,u,v,cells R(r, W), Pos(r, x, y), Cells(cells), AppM(r, u, v), AvoidWall(r, R), get(y, x - 1, cells) == 0, or(x != u, y != v), ~
-					get(y + 1, x, cells) == 1 $ remove_fact(1), remove_fact(2)
-		? Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells)))
-
-	# Exit the bypassing on the chosen side when the path is open
-	!r,x,y,u,v,s,cells  R(r, N), Pos(r, x, y), Cells(cells), get(y + 1, x, cells) == 1, AppM(r,u,v), AvoidWall(r, s), ~
-				dist(x, y, u, v) >f dist(x, y + 1, u, v) $ remove_fact(1), remove_fact(2), remove_fact(5)
-		? Pos(r, x, y + 1), Cells(set(y, x, 1, set(y + 1, x, 0, cells)))
-	!r,x,y,u,v,s,cells  R(r, E), Pos(r, x, y), Cells(cells), get(y, x + 1, cells) == 1, AppM(r,u,v), AvoidWall(r, s), ~
-				dist(x, y, u, v) >f dist(x + 1, y, u, v) $ remove_fact(1), remove_fact(2), remove_fact(5)
-		? Pos(r, x + 1, y), Cells(set(y, x, 1, set(y, x + 1, 0, cells)))
-	!r,x,y,u,v,s,cells  R(r, S), Pos(r, x, y), Cells(cells), get(y - 1, x, cells) == 1, AppM(r,u,v), AvoidWall(r, s), ~
-				dist(x, y, u, v) >f dist(x, y - 1, u, v) $ remove_fact(1), remove_fact(2), remove_fact(5)
-		? Pos(r, x, y - 1), Cells(set(y, x, 1, set(y - 1, x, 0, cells)))
-	!r,x,y,u,v,s,cells  R(r, W), Pos(r, x, y), Cells(cells), get(y, x - 1, cells) == 1, AppM(r,u,v), AvoidWall(r, s), ~
-				dist(x, y, u, v) >f dist(x - 1, y, u, v) $ remove_fact(1), remove_fact(2), remove_fact(5)
-		? Pos(r, x - 1, y), Cells(set(y, x, 1, set(y, x - 1, 0, cells)))
+	!r, x, y, u, v, cells, coords  Pos(r, x, y), Cells(cells), AppM(r, u, v), AstarOutput(r, coords), NextStep(r, 0), ~
+									or(x != u, y != v) $ remove_fact(3), remove_fact(4)
+		? AstarOutput(r, rhai_call("a_star_step", [x, y, u, v, cells])), ~
+			NextStep(r, bool2int(and(first(rhai_call("a_star_step", [x, y, u, v, cells])) > 0, ~
+									last(rhai_call("a_star_step", [x, y, u, v, cells])) > 0)))
+	!r, x, y, u, v, cells, coords  Pos(r, x, y), Cells(cells), AppM(r, u, v), ~
+								AstarOutput(r, coords), NextStep(r, 1), first(coords) >= 0, last(coords) >= 0 $ remove_fact(0), remove_fact(1), remove_fact(4)
+		? 	Pos(r, first(coords), last(coords)), ~
+			Cells(set(y, x, 1, set(	last(coords), first(coords), 0, cells))), NextStep(r, 0)
 
 	#--------4
 	# Check the condition of the robot to move the block in a pair. If the robot is adjacent to the block and ready to move, then it needs to turn north.
