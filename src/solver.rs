@@ -372,6 +372,7 @@ impl Solver{
 
 		self.curr_bid = BlockId(self.curr_bid.0 + 1);
 		let q_start = self.questions.len();
+		let mut rhai_call_cache = HashMap::new();
 
 		let mut env = PEnv{
 			psterms: &mut self.psterms,
@@ -381,6 +382,7 @@ impl Solver{
 			bid: self.curr_bid,
 			answer_subquestions: vec![],
 			answer_once: false,
+			rhai_call_cache: &mut rhai_call_cache,
 		};
 		commands.iter().for_each(|c| {processing(*c, &curr_context, Some(&answer), &mut env);});
 		let requested_subquestions = mem::take(&mut env.answer_subquestions);
@@ -484,6 +486,7 @@ impl Solver{
 			top.context.push_evars(evars, &mut self.psterms, top.bid);
 
 			let new_conj: Vec<TermId> = if level > 1{
+				let mut rhai_call_cache = HashMap::new();
 				let mut env = PEnv{
 					psterms: &mut self.psterms,
 					base: &mut self.base,
@@ -492,6 +495,7 @@ impl Solver{
 					bid: top.bid,
 					answer_subquestions: vec![],
 					answer_once: false,
+					rhai_call_cache: &mut rhai_call_cache,
 				};				
 
 				econj
@@ -520,6 +524,7 @@ impl Solver{
 			}	
 			if level > 1{
 				println!("Terms added to the base: {}", TidsDisplay{tids: &added_terms, psterms: &self.psterms, context:None, dm: DisplayMode::Plain, d:", "});
+				let mut rhai_call_cache = HashMap::new();
 				let mut env = PEnv{
 					psterms: &mut self.psterms,
 					base: &mut self.base,
@@ -528,6 +533,7 @@ impl Solver{
 					bid: top.bid,
 					answer_subquestions: vec![],
 					answer_once: false,
+					rhai_call_cache: &mut rhai_call_cache,
 				};				
 				print_batoms(&vec![], &mut env);
 				
@@ -781,6 +787,7 @@ pub fn matching(
 			},
 			Term::IFunctor(..) => {
 				let p = psterms.len();
+				let mut rhai_call_cache = HashMap::new();
 				
 				let mut env = PEnv{
 					psterms: psterms,
@@ -790,6 +797,7 @@ pub fn matching(
 					bid: bid,
 					answer_subquestions: vec![],
 					answer_once: false,
+					rhai_call_cache: &mut rhai_call_cache,
 				};	
 							
 				let new_qtid = processing(qtid, context, Some(&curr_answer), &mut env).unwrap();

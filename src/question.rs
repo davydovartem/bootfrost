@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 use crate::strategies::{strategies::StrategyItem, strategies::SelectorStrategy, strategies::AnswerOption, attributes::*, environment::PEnv};
 use crate::misc::*;
@@ -125,6 +126,7 @@ impl Question{
 		// }
 
 		let mut curr_answer = self.curr_answer_stack.pop().unwrap();
+		let mut rhai_call_cache = HashMap::new();
 
 		// println!("curr_answer: {}", AnswerDisplay{answer: &curr_answer, psterms: psterms, dm: DisplayMode::Plain});
 
@@ -179,6 +181,7 @@ impl Question{
 								bid: bid,
 								answer_subquestions: vec![],
 								answer_once: false,
+								rhai_call_cache: &mut rhai_call_cache,
 							};
 
 							let b = processing(qtid, context, Some(&curr_answer), &mut env).unwrap();

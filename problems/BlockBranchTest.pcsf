@@ -1,5 +1,5 @@
-#Тут была проблема при удалении одного из атомов базы, опровержении и переходе к следующей, 
-#этот удаленный атом не учитывался и падало в рантайме
+#Here was the problem:
+#When deleting one atom from the base which will be branched, the next atom is not considered and the program crashes
 ? IsBlockOnPosition(B1, 0), IsBlockOnPosition(B2, 0)
 	! IsBlockOnPosition(B1, 0), IsBlockOnPosition(B2, 0)
 		? TargetBlock(B1)

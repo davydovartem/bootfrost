@@ -1,0 +1,87 @@
+? H(10), W(8), R(1, N), R(2, E), R(3, S), B(B1), B(B2), ~
+	IsBlockOnPosition(B1, 0), IsBlockOnPosition(B2, 0), ~
+	IsRobotInPair(1, 0), IsRobotInPair(2, 0), IsRobotInPair(3, 0), ~
+	IsRobotSingle(1, 0), IsRobotSingle(2, 0), IsRobotSingle(3, 0), ~
+	Pos(1, 1, 8), Pos(2, 7, 7), Pos(3, 7, 2), Pos(B1, 6, 5), Pos(B2, 2, 3), ~
+	AstarOutput(1, [0,0]), AstarOutput(2,[0,0]), AstarOutput(3,[0,0]), NextStep(1, 0), NextStep(2, 0), NextStep(3, 0), ~
+	Cells([[0,0,0,0,0,0,0,0,0,0], ~	# y=0  (bottom,  wall)
+	       [0,1,1,1,1,1,1,1,1,0], ~	# y=1
+	       [0,1,1,1,1,1,1,0,1,0], ~	# y=2
+	       [0,1,0,0,1,1,1,1,1,0], ~	# y=3
+	       [0,1,1,1,1,1,1,1,1,0], ~	# y=4
+	       [0,1,1,1,1,1,0,0,1,0], ~	# y=5
+	       [0,1,1,1,1,1,1,1,1,0], ~	# y=6
+	       [0,1,1,1,1,1,1,0,1,0], ~	# y=7
+	       [0,0,1,1,1,1,1,1,1,0], ~	# y=8
+	       [0,1,1,1,1,1,1,1,1,0], ~	# y=9
+	       [0,1,1,1,1,1,1,1,1,0], ~	# y=10
+	       [0,0,0,0,0,0,0,0,0,0]])	# y=11 (top, wall)
+	#--------1.1
+	#0
+	! IsBlockOnPosition(B1, 0), IsBlockOnPosition(B2, 0)
+		? TargetBlock(B1)
+
+	#--------1.2
+	# Select the pair of robots for the block: excluding the farthest.
+	# If equal, we remove the robot with the higher number.
+	# Exclude 3 -> pair (1,2)
+	#3
+	! d1, d2, d3, x1, y1, x2, y2, x3, y3, xb, yb, b ~
+			TargetBlock(b), Pos(b, xb, yb), ~
+			R(1, d1), R(2, d2), R(3, d3), ~
+			Pos(1, x1, y1), Pos(2, x2, y2), Pos(3, x3, y3), ~
+			IsRobotInPair(1, 0), IsRobotInPair(2, 0), IsRobotInPair(3, 0), ~
+			dist(x3, y3, xb, yb) >=f dist(x1, y1, xb, yb), ~
+			dist(x3, y3, xb, yb) >=f dist(x2, y2, xb, yb) $ remove_fact(0)
+		? PairForBlock(b, 1, 2)
+	# Exclude 2 -> pair (1,3)
+	#4
+	! d1, d2, d3, x1, y1, x2, y2, x3, y3, xb, yb, b ~
+			TargetBlock(b), Pos(b, xb, yb), ~
+			R(1, d1), R(2, d2), R(3, d3), ~
+			Pos(1, x1, y1), Pos(2, x2, y2), Pos(3, x3, y3), ~
+			IsRobotInPair(1, 0), IsRobotInPair(2, 0), IsRobotInPair(3, 0), ~
+			dist(x2, y2, xb, yb) >f dist(x3, y3, xb, yb), ~
+			dist(x2, y2, xb, yb) >=f dist(x1, y1, xb, yb) $ remove_fact(0)
+		? PairForBlock(b, 1, 3)
+	# Exclude 1 -> pair (2,3)
+	#5
+	! d1, d2, d3, x1, y1, x2, y2, x3, y3, xb, yb, b ~
+			TargetBlock(b), Pos(b, xb, yb), ~
+			R(1, d1), R(2, d2), R(3, d3), ~
+			Pos(1, x1, y1), Pos(2, x2, y2), Pos(3, x3, y3), ~
+			IsRobotInPair(1, 0), IsRobotInPair(2, 0), IsRobotInPair(3, 0), ~
+			dist(x1, y1, xb, yb) >f dist(x3, y3, xb, yb), ~
+			dist(x1, y1, xb, yb) >f dist(x2, y2, xb, yb) $ remove_fact(0)
+		? PairForBlock(b, 2, 3)
+	#--------1.3
+	# Now strictly appoint, which robot go to the left and which to the right cell under the block.
+	# Compare the distance to the left cell only, the second robot goes to the right cell automatically.
+	#TODO: Calculate the distance to the left and right cells?
+	#6
+	! b, r1, r2, xb, yb, x1, y1, x2, y2 PairForBlock(b, r1, r2), Pos(b, xb, yb), ~
+			Pos(r1, x1, y1), Pos(r2, x2, y2), ~
+			IsRobotInPair(r1, 0), IsRobotInPair(r2, 0), ~
+			dist(x1, y1, xb, yb - 1) <=f dist(x2, y2, xb, yb - 1) $ remove_fact(0), remove_fact(4), remove_fact(5)
+		? AppM(r1, xb, yb - 1), AppM(r2, xb + 1, yb - 1), IsRobotInPair(r1, 1), IsRobotInPair(r2, 1)
+	#7
+	! b, r1, r2, xb, yb, x1, y1, x2, y2 PairForBlock(b, r1, r2), Pos(b, xb, yb), ~
+			Pos(r1, x1, y1), Pos(r2, x2, y2), ~
+			IsRobotInPair(r1, 0), IsRobotInPair(r2, 0), ~
+			dist(x2, y2, xb, yb - 1) <f dist(x1, y1, xb, yb - 1) $ remove_fact(0), remove_fact(4), remove_fact(5)
+		? AppM(r2, xb, yb - 1), AppM(r1, xb + 1, yb - 1), IsRobotInPair(r1, 1), IsRobotInPair(r2, 1)
+	#--------2
+	# `a_star_step` picks
+	# the next cell directly
+	#12
+	!r, x, y, u, v, cells, coords  Pos(r, x, y), Cells(cells), AppM(r, u, v), AstarOutput(r, coords), NextStep(r, 0) $ remove_fact(3), remove_fact(4)
+		? AstarOutput(r, rhai_call("a_star_step", [x, y, u, v, cells])), NextStep(r, 1)
+	!r, x, y, u, v, cells, coords  Pos(r, x, y), Cells(cells), AppM(r, u, v), ~
+								AstarOutput(r, coords), NextStep(r, 1)  $ remove_fact(0), remove_fact(1), remove_fact(4)
+		? 	Pos(r, first(coords), last(coords)), ~
+			Cells(set(y, x, 1, set(	last(coords), first(coords), 0, cells))), NextStep(r, 0)
+	# Check the condition of the robot to move the block in a pair. If the robot is adjacent to the block and ready to move, then it needs to turn north.
+	#32
+	!r, x, y, d, f  R(r, d), AppM(r, x, y), Pos(r, x, y), IsRobotInPair(r, 1) $ remove_fact(0), remove_fact(1)
+		? R(r, N), Ready(r, 1)
+	! r1, r2 Ready(r1, 1), Ready(r2, 1), r1 != r2

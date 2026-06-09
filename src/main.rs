@@ -3,6 +3,7 @@ use clap::Parser;
 
 use bootfrost::solver::*;
 use bootfrost::strategies::strategies::Strategy;
+use bootfrost::strategies::rhai_runtime::RhaiRuntime;
 
 use std::fs::File;
 use std::io::Write;
@@ -28,6 +29,11 @@ struct Arguments{
 	#[clap(short, long)]
 	/// JSON logging
 	json: bool,
+
+	#[clap(short = 'u', long = "user-ifuncs")]
+	/// Path to a Rhai script that defines user functions (e.g. `a_star_step`)
+	/// accessible from the formula via the corresponding ifunction names.
+	user_ifuncs: Option<String>,
 }
 
 
@@ -35,6 +41,18 @@ fn main() {
 
 	let args = Arguments::parse();
 	println!("{:?}", args);
+
+	// Install the user-supplied Rhai script (if any) into the global slot
+	// before constructing the solver, so the ifunction wrappers can reach
+	// it from inside the inference loop.
+	if let Some(path) = &args.user_ifuncs {
+		let rt = RhaiRuntime::from_file(path).unwrap_or_else(|e| {
+			panic!("failed to load Rhai script '{}': {}", path, e);
+		});
+		rt.install_global().unwrap_or_else(|e| {
+			panic!("failed to install Rhai runtime: {}", e);
+		});
+	}
 
 	let s = match args.strategy.as_str(){
 		"plain" => Strategy::PlainShift,
