@@ -622,26 +622,6 @@ fn answer_once(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 	env.psterms.get_tid(Term::Bool(true)).unwrap()
 }
 
-fn answer_subquestion(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
-	if args.len() != 1{
-		panic!("answer_subquestion expects exactly one integer argument");
-	}
-
-	let arg0 = env.psterms.get_term(&args[0]);
-	let i = if let Term::Integer(i) = arg0{
-		i
-	}else{
-		panic!("answer_subquestion expects an integer argument");
-	};
-
-	if i < 0{
-		panic!("answer_subquestion expects a non-negative integer");
-	}
-
-	env.answer_subquestions.push(i as usize);
-	env.psterms.get_tid(Term::Bool(true)).unwrap()
-}
-
 pub fn print_batoms(args: &Vec<TermId>, env: &mut PEnv) -> TermId{
 	if args.len() != 0{
 		panic!("");
