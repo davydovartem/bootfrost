@@ -1,0 +1,15 @@
+#Here was the problem:
+#When deleting one atom from the base which will be branched, the next atom is not considered and the program crashes
+? IsBlockOnPosition(B1, 0), IsBlockOnPosition(B2, 0)
+	! IsBlockOnPosition(B1, 0), IsBlockOnPosition(B2, 0)
+		? TargetBlock(B1)
+		? TargetBlock(B2)
+	! IsBlockOnPosition(B1, 0), IsBlockOnPosition(B2, 1)
+		? TargetBlock(B1)
+	! IsBlockOnPosition(B2, 0), IsBlockOnPosition(B1, 1)
+		? TargetBlock(B2)
+	!b TargetBlock(b)
+		? App(b)
+	! App(b), IsBlockOnPosition(b, 0) $ remove_fact(1)
+		? IsBlockOnPosition(b, 1)
+	!b IsBlockOnPosition(b, 1)

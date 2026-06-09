@@ -1,5 +1,6 @@
 
 use crate::plain::*;
+use lalrpop_util::ParseError;
 
 
 
@@ -58,14 +59,24 @@ fn proc(lines: &Vec<PfLine>, k: &mut usize, stack_indents: &mut Vec<i64>) -> Vec
     while lines[*k].indent > *stack_indents.last().unwrap(){
         stack_indents.push(lines[*k].indent);
         println!("{}",&lines[*k].line);
-        let mut pf = crate::parser::tqfline::TqfLineParser::new().parse(&lines[*k].line).unwrap();
+        let mut pf = match crate::parser::tqfline::TqfLineParser::new().parse(&lines[*k].line){
+            Ok(pf) => pf,
+            Err(e) => {
+                eprintln!("\n=========================================================");
+                eprintln!("PARSER ERROR in formula line #{}", *k);
+                eprintln!("=========================================================");
+                eprintln!("Text of line:\n  {}", lines[*k].line);
+                eprintln!("\n{}", format_parse_error(&lines[*k].line, e));
+                panic!("Parse error in formula line #{}", *k);
+            }
+        };
         *k = *k + 1;
         if *k >= lines.len(){
             res.push(pf);
             return res;
         }
         pf.next = proc(lines, k, stack_indents);
-        
+
         res.push(pf);
         if *k >= lines.len(){
             return res;
@@ -78,6 +89,89 @@ fn proc(lines: &Vec<PfLine>, k: &mut usize, stack_indents: &mut Vec<i64>) -> Vec
 
     stack_indents.pop();
     return res;
+}
+
+/// Convert byte position to line-column pair in a formula line.
+/// Always (1, byte+1), because the parser applies to one line after concatenation.
+fn byte_to_linecol(s: &str, byte: usize) -> (usize, usize){
+    // If location exceeds EOF, clamp to the end of the line.
+    let clamped = byte.min(s.len());
+    (1, clamped + 1)
+}
+
+/// Draws a highlighted fragment of the string with the error position.
+fn highlight_location(s: &str, byte: usize) -> String{
+    let clamped = byte.min(s.len());
+    let col = clamped + 1; // 1-based for display
+
+    // Show window ~60 characters around the error position
+    let window: usize = 60;
+    let start = clamped.saturating_sub(window);
+    let end = (clamped + window).min(s.len());
+    let slice = &s[start..end];
+
+    // Print the fragment and the arrow; if the window is truncated on the left/right, add "..."
+    let prefix = if start > 0 { "..." } else { "" };
+    let suffix = if end < s.len() { "..." } else { "" };
+    let arrow_col = (clamped - start) + prefix.len() + 1;
+
+    let mut underline = String::with_capacity(prefix.len() + slice.len() + 4);
+    underline.push_str(&" ".repeat(prefix.len()));
+    for (i, c) in slice.char_indices(){
+        if i + start == clamped{
+            // Mark the character itself with an arrow
+            let width = c.len_utf8();
+            underline.push_str(&"^".repeat(width.max(1)));
+        }else{
+            // Spaces of corresponding width (for multi-byte characters, multiple spaces)
+            let width = c.len_utf8();
+            underline.push_str(&" ".repeat(width));
+        }
+    }
+    underline.push_str(suffix);
+
+    format!("  {}{}{}\n  {}\n  (position: column {})", prefix, slice, suffix, underline, col)
+}
+
+/// Formats ParseError from LALRPOP into a human-readable message.
+/// Token type is parametrized — we only need its string representation.
+pub fn format_parse_error<T: ToString>(line: &str, e: ParseError<usize, T, &str>) -> String{
+    let expected_str = |expected: &Vec<String>| -> String {
+        if expected.is_empty(){
+            "(nothing expected)".to_string()
+        }else{
+            expected.iter()
+                .map(|s| format!("'{}'", s))
+                .collect::<Vec<_>>()
+                .join(", ")
+        }
+    };
+
+    match e{
+        ParseError::InvalidToken{ location } => {
+            let (l, c) = byte_to_linecol(line, location);
+            format!("Unexpected token on line {}, column {} (byte #{}).\n{}\nExpected: {}",
+                l, c, location, highlight_location(line, location), expected_str(&Vec::new()))
+        },
+        ParseError::UnrecognizedEOF{ location, expected } => {
+            let (l, c) = byte_to_linecol(line, location);
+            format!("Unexpected end of line on line {}, column {} (byte #{}).\n{}\nExpected one of: {}",
+                l, c, location, highlight_location(line, location), expected_str(&expected))
+        },
+        ParseError::UnrecognizedToken{ token: (start, tok, _end), expected } => {
+            let (l, c) = byte_to_linecol(line, start);
+            format!("Unrecognized token '{}' on line {}, column {} (byte #{}).\n{}\nExpected one of: {}",
+                tok.to_string(), l, c, start, highlight_location(line, start), expected_str(&expected))
+        },
+        ParseError::ExtraToken{ token: (start, tok, _end) } => {
+            let (l, c) = byte_to_linecol(line, start);
+            format!("Extra token '{}' on line {}, column {} (byte #{}).\n{}",
+                tok.to_string(), l, c, start, highlight_location(line, start))
+        },
+        ParseError::User{ error } => {
+            format!("Parser error: {}", error)
+        },
+    }
 }
 
 
@@ -118,9 +212,9 @@ pub fn string_to_pflines(s: &str) -> Vec<PfLine>{
 }
 
 pub fn prepare_lines_string(
-        origin_line: &str, 
-        true_lines: &mut Vec<PfLine>, 
-        buff: &mut String, 
+        origin_line: &str,
+        true_lines: &mut Vec<PfLine>,
+        buff: &mut String,
         flag: &mut bool){
 
     let line0 = if let Some((s,_)) = origin_line.split_once("#"){
@@ -129,27 +223,29 @@ pub fn prepare_lines_string(
         &origin_line
     };
 
-    if line0.trim().is_empty(){
+    let trimmed = line0.trim_end();
+
+    if trimmed.is_empty(){
         return;
     }
 
-
-    let line1 = if line0.ends_with("~"){
-        line0.trim_end_matches("~")
+    let (payload, line_continues) = if trimmed.ends_with('~'){
+        (&trimmed[..trimmed.len() - '~'.len_utf8()], true)
     }else{
-        *flag = true;
-        &line0
+        (trimmed, false)
     };
 
-    if line1.trim().is_empty(){
+    if payload.trim().is_empty(){
         return;
     }
 
-    buff.push_str(line1);
-    if *flag{
+    buff.push_str(payload);
+    if !line_continues{
         let pfline = PfLine::new(buff.clone());
         true_lines.push(pfline);
         *buff = String::new();
+        *flag = false;
+    }else{
         *flag = false;
     }
 

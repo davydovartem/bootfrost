@@ -1,6 +1,6 @@
 [package]
 name = "bootfrost"
-version = "0.1.0"
+version = "0.9.0"
 edition = "2021"
 build = "src/build.rs" # LALRPOP preprocessing
 
@@ -16,4 +16,10 @@ regex = "1"
 clap = { version = "3.1.12", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# Rhai: embedded scripting engine used to register user-defined
+# functions that can be invoked from Bootfrost formulas. Pulled in with
+# default features for now; can be trimmed later if binary size matters.
+# `internals` is required to access the `Variant` trait, which is the
+# canonical way to do typed downcasts of `Dynamic` values.
+rhai = { version = "1.25", features = ["sync", "internals"] }
 #bootfrost_derive = {path = "bootfrost_derive"}

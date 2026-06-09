@@ -111,6 +111,7 @@ impl std::hash::Hash for Term {
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct BTerm{
+	pub id: BaseAtomId,
 	pub term: TermId,
 	pub bid: BlockId,
 	pub deleted: bool,

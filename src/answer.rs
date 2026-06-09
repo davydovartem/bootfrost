@@ -47,7 +47,7 @@ impl fmt::Debug for MatchingState{
 pub enum LogItem{
 	Matching{
 		qatom_i: usize, 
-		batom_i: usize, 
+		batom_id: BaseAtomId, 
 		avars:Vec<TermId>, 
 	},
 	Interpretation{
@@ -64,6 +64,7 @@ pub struct Answer{
 	pub bid: BlockId, 
 	pub qid: QuestionId,
 	pub level: Option<usize>,
+	candidate_ids: Vec<BaseAtomId>,
 	lower: usize,
 	middle: usize,
 	upper: usize,
@@ -99,16 +100,20 @@ impl fmt::Debug for Answer{
 
 
 impl Answer{
-	pub fn new(bid: BlockId, qid: QuestionId, b_len: usize, q_len: usize) -> Self{
+	pub fn new(bid: BlockId, qid: QuestionId, base: &Base, q_len: usize) -> Self{
+		let candidate_ids = base.all_ids();
+		let upper = if candidate_ids.is_empty() { 0 } else { candidate_ids.len() - 1 };
+
 		Self{
 			amap: HashMap::new(),
 			log: vec![],
 			bid: bid,
 			qid: qid,
 			level: None,
+			candidate_ids: candidate_ids,
 			lower: 0,
 			middle: 0,
-			upper: b_len-1,
+			upper: upper,
 			k: 0,
 			conj_len: q_len,
 			state: MatchingState::Zero,
@@ -120,10 +125,10 @@ impl Answer{
 		self.log.len()
 	}
 
-	pub fn get_batoms(&self) -> Vec<Option<usize>>{
+	pub fn get_batoms(&self) -> Vec<Option<BaseAtomId>>{
 		self.log.iter().map(|x| {
 			match x{
-				LogItem::Matching{batom_i,..} => Some(*batom_i),
+				LogItem::Matching{batom_id,..} => Some(*batom_id),
 				LogItem::Interpretation{..} => None,
 			}
 		}).collect()
@@ -140,8 +145,8 @@ impl Answer{
 		self.amap.get(tid)
 	}
 
-	pub fn push_satom(&mut self, qatom_i: usize, b:usize){
-		self.log.push(LogItem::Matching{qatom_i: qatom_i, batom_i:b, avars: vec![]}); //FIX
+	pub fn push_satom(&mut self, qatom_i: usize, batom_id: BaseAtomId){
+		self.log.push(LogItem::Matching{qatom_i: qatom_i, batom_id: batom_id, avars: vec![]}); //FIX
 	}
 
 	pub fn push_iatom(&mut self, qatom_i: usize){
@@ -201,11 +206,31 @@ impl Answer{
 		}
 	}
 
-	pub fn shift_bounds(&mut self, blen:usize) -> bool{
-		// println!("shift_bounds: {}, {}", self.upper, blen);
-		if self.upper < blen-1{
+	pub fn candidate_len(&self) -> usize{
+		self.candidate_ids.len()
+	}
+
+	pub fn refresh_candidates(&mut self, base: &Base) -> bool{
+		let mut added = false;
+
+		for id in base.all_ids(){
+			if !self.candidate_ids.contains(&id){
+				self.candidate_ids.push(id);
+				added = true;
+			}
+		}
+
+		added
+	}
+
+	pub fn shift_bounds(&mut self) -> bool{
+		if self.candidate_ids.is_empty(){
+			return false;
+		}
+
+		if self.upper < self.candidate_ids.len() - 1{
 			self.middle = self.upper;
-			self.upper = blen-1;
+			self.upper = self.candidate_ids.len() - 1;
 			self.k = 0;
 			true
 		}else{
@@ -224,10 +249,18 @@ impl Answer{
 
 	pub fn next_b(&mut self){
 		match self.log.last_mut().unwrap(){
-			LogItem::Matching{ref mut batom_i, qatom_i, ..} => {
+			LogItem::Matching{ref mut batom_id, qatom_i, ..} => {
+				let current_pos = if let Some(pos) = self.candidate_ids.iter().position(|id| *id == *batom_id){
+					pos
+				}else{
+					self.pop();
+					self.state = MatchingState::Rollback;
+					return;
+				};
+
 				if *qatom_i < self.k{
-					if *batom_i < self.middle{
-						*batom_i = *batom_i + 1;
+					if current_pos < self.middle{
+						*batom_id = self.candidate_ids[current_pos + 1];
 						self.back_top();
 						self.state = MatchingState::Ready;
 					}else{
@@ -235,8 +268,8 @@ impl Answer{
 						self.state = MatchingState::Rollback;
 					}
 				}else if *qatom_i == self.k{
-					if *batom_i < self.upper{
-						*batom_i = *batom_i + 1;
+					if current_pos < self.upper{
+						*batom_id = self.candidate_ids[current_pos + 1];
 						self.back_top();
 						self.state = MatchingState::Ready;
 					}else{
@@ -244,8 +277,8 @@ impl Answer{
 						self.state = MatchingState::Rollback;
 					}	
 				}else if *qatom_i > self.k{
-					if *batom_i < self.upper{
-						*batom_i = *batom_i + 1;
+					if current_pos < self.upper{
+						*batom_id = self.candidate_ids[current_pos + 1];
 						self.back_top();
 						self.state = MatchingState::Ready;
 					}else{
@@ -261,7 +294,7 @@ impl Answer{
 		}
 	}
 
-	pub fn next_a(&mut self, psterms: &mut PSTerms, tqf: &Tqf, base: &Base) -> bool{
+	pub fn next_a(&mut self, psterms: &mut PSTerms, tqf: &Tqf) -> bool{
 		let state_len = self.len();
 		if state_len < self.conj_len{
 			let x = tqf.conj[state_len];
@@ -269,12 +302,12 @@ impl Answer{
 			self.state = MatchingState::Ready;
 			match q_term{
 				Term::SFunctor(..) => {
-					if base.is_empty(){
+					if self.candidate_ids.is_empty(){
 						self.state = MatchingState::Exhausted;
 						false
 					}else{
 						let b = self.get_b(state_len);
-						self.push_satom(state_len, b);
+						self.push_satom(state_len, self.candidate_ids[b]);
 						true
 					}
 				},

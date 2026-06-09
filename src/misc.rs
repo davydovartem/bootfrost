@@ -22,6 +22,9 @@ pub struct AnswerId(pub usize, pub usize);
 #[derive(Copy, Clone, Hash, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub struct BlockId(pub usize);
 
+#[derive(Copy, Clone, Hash, PartialEq, Eq, Debug, Deserialize, Serialize)]
+pub struct BaseAtomId(pub usize);
+
 #[derive(Copy, Clone, Debug, Deserialize, Serialize)]
 pub enum Quantifier{
     Forall,

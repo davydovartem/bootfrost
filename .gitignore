@@ -83,3 +83,8 @@ $RECYCLE.BIN/
 /tools/block_move_viewer/__pycache__/*
 /tools/block_move_viewer/exports
 /tools/block_move_viewer/exports/*
+
+/problems/*.json
+/problems/*.log.pcsf
+/problems/*.exe
+/problems/*.bat
