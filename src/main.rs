@@ -68,6 +68,7 @@ fn main() {
 	solver.print();
 	let r = solver.solver_loop(args.limit);
 	solver.slog.set_result(format!("{:?}",r));
+	solver.print_refuted_summary();
 	if args.json{
 		let j = serde_json::to_string_pretty(&solver.slog).unwrap();
 		//println!("\n\n---- JSON LOG ----\n {}", j);

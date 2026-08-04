@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::mem;
+use std::time::Instant;
 
 use crate::misc::*;
 use crate::term::*;
@@ -37,6 +38,17 @@ pub struct BranchBlock{
 	pub bid: BlockId,
 	pub psterms_car: usize,
 	pub enabled: bool,
+	base_number: usize,
+}
+
+#[derive(Clone)]
+struct BaseStartInfo{
+	step_start: usize,
+	time_start: Instant,
+	base_len_start: usize,
+	deleted_atoms_start: usize,
+	questions_added: usize,
+	atoms_added: usize,
 }
 
 
@@ -50,9 +62,12 @@ pub struct Solver{
 	bstack: Vec<BranchBlock>,
 	curr_bid: BlockId,
 	curr_step: usize,
+	curr_base_number: usize,
 	attributes: Attributes,
 	strategy: Strategy,
 	pub slog: SolverLog,
+	#[serde(skip)]
+	base_starts: HashMap<usize, BaseStartInfo>,
 }
 
 impl Solver{
@@ -112,6 +127,24 @@ impl Solver{
 				deleted: self.is_base_atom_deleted(b.id),
 			}
 		}).collect()
+	}
+
+	#[inline]
+	fn deleted_atoms_count(&self) -> usize{
+		self.base
+			.base
+			.iter()
+			.filter(|bt| self.is_base_atom_deleted(bt.id))
+			.count()
+	}
+
+	#[inline]
+	fn live_base_len(&self) -> usize{
+		self.base
+			.base
+			.iter()
+			.filter(|bt| !self.is_base_atom_deleted(bt.id))
+			.count()
 	}
 
 	pub fn print_tqf(&self, tid: TqfId, tab:String, context: &Context){
@@ -205,6 +238,25 @@ impl Solver{
 		}
 	}
 
+	pub fn print_refuted_summary(&self){
+		println!("\n=========================================================================");
+		println!("====================== Refuted bases statistics ========================");
+		println!("=========================================================================");
+		if self.slog.refuted_bases.is_empty(){
+			println!("(no bases have been refuted)");
+			return;
+		}
+		println!("Total refuted bases: {}", self.slog.refuted_bases.len());
+		for s in self.slog.refuted_bases.iter(){
+			println!(
+				"Base #{}: steps_to_refute={}, time_ms={}, base_len {}->{} (whole global base), questions_added={}, atoms_added={}, atoms_removed(soft)={}",
+				s.base_number, s.steps_to_refute, s.time_ms,
+				s.base_len_start, s.base_len_end,
+				s.questions_added, s.atoms_added, s.atoms_removed
+			);
+		}
+	}
+
 	pub fn parse_file(path: &str, strategy: Strategy) -> Solver{
 		let pf = crate::parser::parser::parse_file(path);
 		Solver::from_pf(pf, strategy)
@@ -234,22 +286,25 @@ impl Solver{
 			bid: BlockId(0),
 			psterms_car: psterms.len(),
 			enabled: false,
+			base_number: 0,
 		};
 
 
-		let mut solver = Solver{
-			psterms: psterms,
-			base: Base::new(),
-			tqfs: tqfs,
-			questions: vec![],
-			preferred_subquestions: vec![],
-			bstack: vec![first_block],
-			curr_bid: BlockId(0),
-			curr_step:0,
-			attributes: Attributes::new(),
-			strategy: strategy,
-			slog: SolverLog::new()
-		};
+			let mut solver = Solver{
+				psterms: psterms,
+				base: Base::new(),
+				tqfs: tqfs,
+				questions: vec![],
+				preferred_subquestions: vec![],
+				bstack: vec![first_block],
+				curr_bid: BlockId(0),
+				curr_step:0,
+				curr_base_number: 0,
+				attributes: Attributes::new(),
+				strategy: strategy,
+				slog: SolverLog::new(),
+				base_starts: HashMap::new(),
+			};
 
 		solver.slog.set_formula(solver.export_formula(tid));
 		solver.enable_block();
@@ -400,16 +455,17 @@ impl Solver{
 
 		
 
-		let mut new_block: BranchBlock = BranchBlock{
-			aid: aid,
-			parent_answer: Some(answer.clone()),
-			atqf: atqf,
-			eindex: 0,
-			context: Context::new(&curr_context, &answer),
-			bid: self.curr_bid,
-			psterms_car:self.psterms.len(),
-			enabled: false,
-		};
+			let mut new_block: BranchBlock = BranchBlock{
+				aid: aid,
+				parent_answer: Some(answer.clone()),
+				atqf: atqf,
+				eindex: 0,
+				context: Context::new(&curr_context, &answer),
+				bid: self.curr_bid,
+				psterms_car:self.psterms.len(),
+				enabled: false,
+				base_number: self.curr_base_number,
+			};
 
 		self.bstack.push(new_block);
 		if self.enable_block(){
@@ -579,8 +635,37 @@ impl Solver{
 			}else{
 				println!("\nNew questions: NO.")
 			}
+			// Record/accumulate stats for this logical base.
+			// ponytail: "added" counters должны считать только то, что добавилось в процессе вывода,
+			// а не начальную базу/начальные вопросы (level == 1).
+			// Capture counters BEFORE append, because append() drains new_questions.
+			let base_num = top.base_number;
+			let questions_added = new_questions.len();
+			let atoms_added = added_terms.len();
+			let step_start = self.curr_step;
+
 			self.questions.append(&mut new_questions);
-			return true;		
+
+			// Нельзя дергать `self.*` внутри `or_insert_with` из-за borrow-checker'а:
+			// entry() уже держит mutable borrow на `self.base_starts`.
+			let base_len_start_now = self.live_base_len();
+			let deleted_atoms_start_now = self.deleted_atoms_count();
+			let info = self.base_starts.entry(base_num).or_insert_with(move || BaseStartInfo{
+				step_start: step_start,
+				time_start: Instant::now(),
+				base_len_start: base_len_start_now,
+				deleted_atoms_start: deleted_atoms_start_now,
+				questions_added: 0,
+				atoms_added: 0,
+			});
+
+			// Для корневого enable_block (level == 1) initial conj/questions не считаем "added".
+			if level > 1{
+				info.atoms_added += atoms_added;
+				info.questions_added += questions_added;
+			}
+
+			return true;
 		}else{
 			panic!("");
 		}
@@ -593,8 +678,10 @@ impl Solver{
 			let esize = e_tqfs.len();
 			if top.eindex < esize - 1{
 				top.eindex = top.eindex + 1;
-				self.curr_bid = BlockId(self.curr_bid.0 + 1); 
+				self.curr_bid = BlockId(self.curr_bid.0 + 1);
 				top.bid = self.curr_bid;
+				self.curr_base_number += 1;
+				top.base_number = self.curr_base_number;
 				true
 			}else{
 				false
@@ -605,6 +692,13 @@ impl Solver{
 	}
 
 	pub fn remove_branch(&mut self){
+		// Snapshot the state of the current (being refuted) logical base
+		// BEFORE any blocks are disabled and removed from the base.
+		let refuted_base_num = self.bstack.last().map(|b| b.base_number).unwrap_or(0);
+		let base_len_end = self.live_base_len();
+		let step_end = self.curr_step;
+		let deleted_atoms_end = self.deleted_atoms_count();
+
 		while let Some(..) = self.bstack.last(){
 			self.disable_block();
 			if !self.next_block(){
@@ -613,8 +707,29 @@ impl Solver{
 				break;
 			}
 		}
-		println!("Branch has been removed");
 
+		// Finalize refute statistics for the logical base.
+		self.finalize_base_stats(refuted_base_num, base_len_end, step_end, deleted_atoms_end);
+
+		println!("Branch has been removed");
+	}
+
+	fn finalize_base_stats(&mut self, base_num: usize, base_len_end: usize, step_end: usize, deleted_atoms_end: usize){
+		if let Some(start) = self.base_starts.remove(&base_num){
+			let atoms_removed = deleted_atoms_end.saturating_sub(start.deleted_atoms_start);
+			self.slog.add_refuted_base(RefutedBaseStats{
+				base_number: base_num,
+				step_start: start.step_start,
+				step_end: step_end,
+				steps_to_refute: step_end.saturating_sub(start.step_start),
+				time_ms: start.time_start.elapsed().as_millis(),
+				base_len_start: start.base_len_start,
+				base_len_end: base_len_end,
+				questions_added: start.questions_added,
+				atoms_added: start.atoms_added,
+				atoms_removed: atoms_removed,
+			});
+		}
 	}
 
 
@@ -626,6 +741,9 @@ impl Solver{
 			println!("================================ Step {} ================================", self.curr_step);
 			println!("=========================================================================");
 			self.slog.new_step(self.curr_step);
+				let curr_base = self.bstack.last().map(|b| b.base_number).unwrap_or(0);
+			println!("Current base: {}", curr_base);
+			self.slog.set_current_base(curr_base);
 			// println!("== {}",self.base[0].term.total_size());
 			i = i + 1;
 			if self.bstack.is_empty(){

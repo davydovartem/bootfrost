@@ -1,0 +1,14 @@
+fn getSettings(setting) {
+	if setting[0] == "BaseFormation" {
+		print(`setting1 = ${setting}`);
+		return "F1";
+	}
+	if setting[0] == "D_min" {
+		print(`setting2 = ${setting}`);
+		return 20;
+	}
+	if setting[0] == "Sz_min" {
+		print(`setting3 = ${setting}`);
+		return 10;
+	}
+}

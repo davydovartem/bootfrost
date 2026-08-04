@@ -39,7 +39,22 @@ pub struct StepItem{
 	pub atoms_added: Vec<JsonTerm>,
 	pub atoms_used: Vec<JsonTerm>,
 	pub base: Vec<JsonBaseItem>,
+	pub current_base: usize,
 	//pub completed: bool
+}
+
+#[derive(Serialize)]
+pub struct RefutedBaseStats{
+	pub base_number: usize,
+	pub step_start: usize,
+	pub step_end: usize,
+	pub steps_to_refute: usize,
+	pub time_ms: u128,
+	pub base_len_start: usize,
+	pub base_len_end: usize,
+	pub questions_added: usize,
+	pub atoms_added: usize,
+	pub atoms_removed: usize,
 }
 
 #[derive(Serialize)]
@@ -47,6 +62,7 @@ pub struct SolverLog{
 	pub formula: Option<JsonFormula>,
 	pub log: Vec<StepItem>,
 	pub result: String,
+	pub refuted_bases: Vec<RefutedBaseStats>,
 	//pub curr_step: usize
 }
 
@@ -55,7 +71,8 @@ impl SolverLog{
 		SolverLog{
 			formula: None,
 			log: vec![],
-			result: "".to_string()
+			result: "".to_string(),
+			refuted_bases: vec![]
 			//curr_step: 0
 		}
 	}
@@ -72,6 +89,7 @@ impl SolverLog{
 			atoms_added: vec![],
 			atoms_used: vec![],
 			base: vec![],
+			current_base: 0,
 			//completed: false
 		};
 		self.log.push(x);
@@ -86,6 +104,16 @@ impl SolverLog{
 		let x = self.log.last_mut().unwrap();
 		x.question = q;
 		x.answer = a;
+	}
+
+	pub fn set_current_base(&mut self, bid: usize){
+		if let Some(x) = self.log.last_mut(){
+			x.current_base = bid;
+		}
+	}
+
+	pub fn add_refuted_base(&mut self, s: RefutedBaseStats){
+		self.refuted_bases.push(s);
 	}
 
 	pub fn set_atoms(&mut self, a_a: Vec<JsonTerm>, a_u: Vec<JsonTerm>){

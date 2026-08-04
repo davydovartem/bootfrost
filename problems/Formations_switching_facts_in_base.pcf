@@ -1,0 +1,55 @@
+? L("eps", S), ~
+	Switch(S,"sf1",F1), Switch(S,"sf2",F2), Switch(S,"sf3",F3),~
+	Switch(F1,"f1f2",F2), Switch(F2, "f2f3",F3), Switch(F3,"f3f1",F1), Switch(F4, "f4f1", F1), Switch(F4, "f4f2", F2), Switch(F4, "f4f3", F3),~
+	Switch(F1, "f1f4", F4), Switch(F2, "f2f4", F4), Switch(F3, "f3f4", F4), Switch(F2, "f2f1", F1), Switch(F3, "f3f2", F2), Switch(F1, "f1f3", F3),~
+	Switch(F1, "f1f0", F0), Switch(F2, "f2f0", F0), Switch(F3, "f3f0", F0), Switch(F4, "f4f0", F0),~
+	Switch(F0, "f0f1", F1), Switch(F0, "f0f2", F2),~
+        WallDetected(15), TunnelDetected(15), ObstacleDetected(10, 11),~
+	CurrentFormation(S),~
+	Environment("Start")
+
+  ! data Environment(data)	
+	? BaseFormation(rhai_call("getSettings", ["BaseFormation"])), D_min(rhai_call("getSettings", ["D_min"])), Sz_min(rhai_call("getSettings", ["Sz_min"]))
+	#Правило 1
+ 		! q1, q2, e  CurrentFormation(q1), ObstacleDetected(0), BaseFormation(q2), Switch(q1,e,q2)     $ remove_fact(1) 
+			? E(e) 
+	#Правило 2
+		! c_f, t_d, d_min, e CurrentFormation(c_f), c_f!= F3, TunnelDetected(t_d), D_min(d_min), t_d < d_min, Switch(c_f, e, F3)	$ remove_fact(2) 
+			? E(e) 
+  	#Правило 3
+		! c_f, w_d, d_min CurrentFormation(F2), WallDetected(w_d), D_min(d_min), w_d < d_min	$ remove_fact(1)
+			? E("f2f1") 
+	#Правило 4
+		! c_f, o_d, o_sz, d_min, e CurrentFormation(c_f), ObstacleDetected(o_d, o_sz), D_min(d_min), o_d < d_min, Sz_min(sz_min), o_sz > sz_min, Switch(c_f, e, F2)	$ remove_fact(1) 
+			? E(e) 
+	#Правило 5
+ 		! c_f, o_sum, e  CurrentFormation(c_f), MultiObstaclesDetected(o_sum), o_sum > 2, Switch(c_f, e, F3)     $ remove_fact(1)		
+			? E(e)
+	#Правило 6		
+		! c_f, e  CurrentFormation(c_f), Signal(0), Switch(c_f, e, F0)	$ remove_fact(1)
+			? E(e) 
+
+  ! q1, q2, s, e, env  E(e), L(s, q1), Switch(q1,e,q2)	$ remove_fact(0), remove_fact(1)
+	? L(s++e, q2), CurrentFormation(q2)
+
+
+
+#Правило 1: Если по ходу движения в безопасном радиусе нет препятствий любого рода, АМР движется по законам базовой формации.
+#Правило 2: Если АМР в формации, отличной от «веревки» (F3), обнаружил тоннель по ходу движения, и расстояние до тоннеля меньше заданного, требуется перестроение в формацию «верёвка» (F3).  
+#Правило 3: Если АМР в формация «пятно» (F2) обнаружил стену на небезопасном расстоянии по ходу движения, требуется перестроение в формацию «шеренга» (F1).
+#Правило 4: АМР в любой формации при обнаружении на небезопасном расстоянии по ходу движения точечного препятствия, размер которого больше заданного, перестраивается в формацию «пятно» (F2).
+#Правило 5: При идентификации более двух препятствий АМР  перестраивается в формацию «верёвка» (F3). 
+#Правило 6: При потере связи с другими АМР группы АМР переходит в режим одиночного функционирования «F0». 
+
+
+#fn getSettings(setting) {
+#	if setting[0] == "BaseFormation" {
+#		return "F1";
+#	}
+#	if setting[0] == "D_min" {
+#		return 20;
+#	}
+#	if setting[0] == "Sz_min" {
+#		return 10;
+#	}
+#}

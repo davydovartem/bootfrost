@@ -88,3 +88,11 @@ $RECYCLE.BIN/
 /problems/*.log.pcsf
 /problems/*.exe
 /problems/*.bat
+/node_modules
+AGENTS.md
+package-lock.json
+package.json
+/papers
+/papers/*
+/docs
+/docs/*
