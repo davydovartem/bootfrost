@@ -96,3 +96,9 @@ package.json
 /papers/*
 /docs
 /docs/*
+/problems/BlockMovePlanning/*.json
+/problems/BlockMovePlanning/*.log
+/problems/BlockMovePlanning/*.log.pcsf
+/problems/BlockMovePlanning/*.json
+/problems/BlockMovePlanning/steps
+
